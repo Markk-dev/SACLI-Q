@@ -1,0 +1,10 @@
+php artisan reverb:start 
+--Start broadcasting service
+
+
+php artisan serve 
+--serve application locally
+
+npm run dev
+npm run
+--to start vite and other dependencies

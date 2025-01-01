@@ -4,6 +4,7 @@
         <div class="mt-8 p-4 sm:ml-64 dark:bg-gray-700 min-h-screen">
             <div class="mt-8 p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">User Queues and Window Groups</h1>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">List of Queues and windows you have access to</h2>
                 <div class="mt-4">
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Queues</h2>
                     @if ($queues->isNotEmpty())

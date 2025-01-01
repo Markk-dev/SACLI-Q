@@ -11,7 +11,7 @@ class WindowGroupAccess extends Model
     protected $fillable = [
         'user_id',
         'window_group_id',
-        'description',
+        'window_name',
     ];
 
     public function user()

@@ -58,24 +58,28 @@
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Actions</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <button 
+                        id="next-ticket"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded shadow-lg relative group"
                         title="Move to the next ticket in the queue">
                         Next
                     </button>
                     <button 
+                        id="complete-ticket"
+                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow-lg relative group"
+                        title="Mark the current ticket as completed">
+                        Complete
+                    </button>
+                    <button 
+                        id="call-ticket"
                         class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded shadow-lg relative group"
                         title="Call the current ticket to the window">
                         Call
                     </button>
                     <button 
+                        id="hold-ticket"
                         class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded shadow-lg relative group"
                         title="Put the current ticket on hold">
                         Hold
-                    </button>
-                    <button 
-                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow-lg relative group"
-                        title="Mark the current ticket as completed">
-                        Complete
                     </button>
                 </div>
             </section>
@@ -99,3 +103,24 @@
         </div>
     </x-slot>
 </x-Dashboard>
+
+<script type="module">
+
+
+    $(document).ready(function() {
+        let btnComplete = $('#complete-ticket');
+        let btnNext = $('#next-ticket');
+
+        btnComplete.on('click', function(event) {
+            event.preventDefault();
+            alert('Complete Ticket');
+            // Add your logic for completing the ticket here
+        });
+
+        btnNext.on('click', function(event) {
+            event.preventDefault();
+            alert('Next Ticket');
+            // Add your logic for moving to the next ticket here
+        });
+    });
+</script>

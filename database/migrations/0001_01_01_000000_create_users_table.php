@@ -56,7 +56,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('window_group_id')->constrained('window_groups')->onDelete('cascade');            
-            $table->string('description')->nullable(); 
+            $table->string('window_name')->nullable(); 
             $table->timestamps();
         });
 

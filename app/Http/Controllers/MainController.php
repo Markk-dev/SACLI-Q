@@ -5,18 +5,59 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+
 class MainController extends Controller
 {
+    //Login Logout
     function index(){
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
        return view('Login');
     }
+    function login(Request $request){
+        $request->validate([
+            'account_id' => 'required',
+            'password' => 'required'
+        ]);
 
+        
+        //Validate the user account 
+        if (Auth::attempt(['account_id' => $request->account_id, 'password' => $request->password])) {
+            $user = Auth::user();
+    
+            // Create a Sanctum token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            session(['account_id' => $user->account_id, 'access_type'=>$user->access_type,
+             'name'=>$user->name, 'user_id'=>$user->id, 'token'=>$token]);
+            
+            return redirect()->intended('dashboard'); 
+        }
+            
+        return redirect()->back()->withErrors([
+                'error' => 'The provided credentials do not match our records.',
+            ])->withInput($request->only('account_id'));
+        
+    }
+
+    public function logout()
+    {
+        // Log out the user
+        Auth::logout();
+
+        // Redirect to the login page
+        return redirect()->route('index')->with('success', 'You have been logged out.');
+    }
+
+    //Homepage dashboard
     function dashboard(){
+        // dd(session()->all());
         return view('Homepage');
      }
 
 
-     //Management
+     //User Management
      function users(Request $request){
         $query = User::query();
 
@@ -54,35 +95,6 @@ class MainController extends Controller
             ])->withInput($request->only('account_id', 'name'));
         }
      }
-
-     //Queues
-     function queues(){
-        return view('QueuingDashboard');
-     }
-
-     //Joining a queue as a window
-     function queueWindow(){
-        return view('QueueWindow');
-     }
-    function login(Request $request){
-        $request->validate([
-            'account_id' => 'required',
-            'password' => 'required'
-        ]);
-
-        
-        //Validate the user account 
-        if (Auth::attempt(['account_id' => $request->account_id, 'password' => $request->password])) {
-            $user = Auth::user();
-
-            session(['account_id' => $user->account_id, 'access_type'=>$user->access_type, 'name'=>$user->name, 'user_id'=>$user->id]);
-            return redirect()->intended('dashboard'); 
-        }
-            return redirect()->back()->withErrors([
-                'error' => 'The provided credentials do not match our records.',
-            ])->withInput($request->only('account_id'));
-        
-    }
 
     function deleteAccount($id)
     {

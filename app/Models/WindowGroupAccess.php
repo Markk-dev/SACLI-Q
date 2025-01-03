@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class WindowGroupAccess extends Model
 {
     protected $table = 'window_group_access';
-
+    public $timestamps = true;
     protected $fillable = [
         'user_id',
         'window_group_id',

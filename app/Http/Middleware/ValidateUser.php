@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Session;
 
 class ValidateUser
 {
+    
     /**
      * Handle an incoming request.
      *

@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Session;
 use App\Models\User;
 use App\Models\Queue;
 use App\Models\WindowGroup; 
-use App\Models\WindowGroupAcesss; 
+use App\Models\WindowGroupAccess; 
 class QueueController extends Controller
 {
-    // Add these methods
+    // Managing Queues
+    //View 
     public function manageQueues(Request $request)
     {
         $query = Queue::query();
@@ -27,6 +28,7 @@ class QueueController extends Controller
         return view('QueueManagement', compact('queues', 'windowGroups'));
     }
 
+    //Create a new queue
     public function createQueue(Request $request)
     {
         $request->validate([
@@ -50,6 +52,7 @@ class QueueController extends Controller
         return redirect()->route('manageQueues')->with('success', 'Queue created successfully.');
     }
 
+    //Delete a queue
     public function deleteQueue($id)
     {
         $queue = Queue::findOrFail($id);
@@ -58,23 +61,22 @@ class QueueController extends Controller
         return redirect()->route('manageQueues')->with('success', 'Queue deleted successfully.');
     }
 
-    //To see associated queue window groups and data
-
+    //To see associated queue window groups and other data
     public function viewQueue($id)
     {
         $queue = Queue::with('windowGroups')->findOrFail($id);
         return view('ViewQueueWindowGroups', compact('queue'));
     }
     
-    //view window groups list, functions add and delete 
+    //view a window group of a queue to see who are the users who has access
     public function viewWindowGroup($id)
     {
         $windowGroup = WindowGroup::findOrFail($id);
         $users = $windowGroup->users;
-        $allUsers = User::all(); // Users with access to the window
+        $allUsers = User::all(); 
         return view('ViewWindowGroup', compact('windowGroup', 'users', 'allUsers'));
     }
-    
+    //Add another window group to a queue
     public function addWindowGroup(Request $request, $queue_id)
     {
         $request->validate([
@@ -92,6 +94,7 @@ class QueueController extends Controller
         return redirect()->route('queue.view', ['id' => $queue_id])->with('success', 'Window group added successfully.');
     }
 
+    //Delete a window group from the queue
     public function removeWindowGroup($id)
     {
         $windowGroup = WindowGroup::findOrFail($id);
@@ -113,6 +116,7 @@ class QueueController extends Controller
         return redirect()->route('windowGroups.view', ['id' => $id])->with('success', 'User assigned successfully.');
     }
 
+    //Removing a user from the window group
     public function removeUserFromWindowGroup($id, $user_id)
     {
         $windowGroup = WindowGroup::findOrFail($id);

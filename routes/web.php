@@ -14,8 +14,9 @@ Route::get('/broadcast', function () {
 
 
 Route::get('/', [MainController::class, 'index']) -> name('index');
+Route::get('/login', [MainController::class, 'index']) -> name('index');
 Route::post('/login', [MainController::class, 'login']) -> name('login');
-Route::get('/logout', [MainController::class, 'index']) -> name('logout')->middleware(ValidateUser::class);
+Route::get('/logout', [MainController::class, 'logout']) -> name('logout')->middleware(ValidateUser::class);
 // Add logout later
 
 //Dashboard, user management, queue management, window
@@ -34,10 +35,9 @@ Route::get('/manage-queues', [QueueController::class, 'manageQueues']) -> name('
         Route::post('/windowGroups/{id}/assignUser', [QueueController::class, 'assignUserToWindowGroup'])->name('windowGroups.assignUser');
         Route::delete('/windowGroups/{id}/removeUser/{user_id}', [QueueController::class, 'removeUserFromWindowGroup'])->name('windowGroups.removeUser');
 Route::get('/my-queues', [QueueController::class, 'myQueuesAndWindows']) -> name('myQueues')->middleware(ValidateUser::class);
-    Route::get('/queuing-dashboard/{id}', [QueuingDashboardController::class, 'show'])->name('QueuingDashboard')->middleware(ValidateUser::class);;
+    Route::get('/queuing-dashboard/{id}', [QueuingDashboardController::class, 'dashboard'])->name('QueuingDashboard')->middleware(ValidateUser::class);;
 
-//Routes for queueing
-
+//Routes for queueing: Seeing live queue, getting ticket
 Route::get('/SACLI-Q/live/{id}', [QueuingDashboardController::class, 'liveQueue'])->name('liveQueue');
 Route::get('/SACLI-Q/ticketing/{id}', [QueuingDashboardController::class, 'ticketing'])->name('ticketing');
 Route::post('/SACLI-Q/ticketing/submit', [QueuingDashboardController::class, 'ticketingSubmit'])->name('ticketing.submit');
@@ -46,7 +46,13 @@ Route::get('/SACLI-Q/ticketing/submit', function () {
 });
 
 
-
+//API
+Route::post('api/set-window/{id}', [QueuingDashboardController::class, 'updateWindow'])
+    ->name('updateWindowName');
+Route::get('api/ticket/next/{windowGroupId}', [QueuingDashboardController::class, 'getNextTicketForWindow'])
+    ->name('getNextTicketForWindow');
+    Route::get('api/ticket/current/{windowGroupId}', [QueuingDashboardController::class, 'getCurrentTicketForWindow'])
+    ->name('getCurrentTicketForWindow');
 //Fallback route when an invalid url is entered
 // Route::fallback(function () {
 //     return redirect()->route('index');

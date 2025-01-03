@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class WindowGroup extends Model
 {
     protected $table = 'window_groups';
-    public $timestamps = true;
+
     protected $fillable = [
         'name',
         'description',

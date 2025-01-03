@@ -1,15 +1,15 @@
 <x-App>
     <x-slot name="content">
-        <div class="flex flex-wrap">
+        <div class="flex flex-wrap bg-[url('https://th.bing.com/th/id/OIP.CyyzDsXdZ2mk3HbUCv4THQHaEK?rs=1&pid=ImgDetMain')]">
             <div class="w-2/3">
-              <div class="grid grid-cols-1 gap-6 p-5 h-full bg-green-200">
+              <div class="grid grid-cols-1 gap-6 p-5 h-full">
                 <!-- Window Groups Section -->
-                <div class="p-6 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col h-full">
+                <div class="p-6 bg-white border border-gray-300 rounded-lg shadow-2xl flex flex-col h-full">
                   <h2 class="text-3xl font-semibold text-gray-900 mb-6 flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                           <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414z" clip-rule="evenodd" />
                       </svg>
-                      Window Groups
+                    Calling
                   </h2>
                   @if ($windowGroups->isNotEmpty())
                       @foreach ($windowGroups as $windowGroup)
@@ -27,7 +27,7 @@
                                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0 1a9 9 0 110-18 9 9 0 010 18z" clip-rule="evenodd" />
                                               </svg>
-                                              <span class="text-lg">{{ $queuedPerson->name }} - {{ $queuedPerson->status }}</span>
+                                              <span class="text-lg">{{ $queuedPerson->code }} - Head to {{$windowGroup->window_name}}</span>
                                           </li>
                                       @endforeach
                                   </ul>
@@ -42,7 +42,7 @@
                 </div>
 
                 <!-- Queued Users Section -->
-                <div class="p-6 bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col w-12/12 h-full">
+                <div class="p-6 bg-white border border-gray-300 rounded-lg shadow-2xl flex flex-col w-12/12 h-full">
                   <h2 class="text-3xl font-semibold text-gray-900 mb-6 flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0 1a9 9 0 110-18 9 9 0 010 18z" clip-rule="evenodd" />
@@ -68,67 +68,64 @@
             </div>
 
             <div class="w-1/3">
-                <div
-                class="relative h-screen"
-                data-twe-carousel-init
-                data-twe-ride="carousel">
-                <!--Carousel items-->
-                <div
-                  class="relative w-full overflow-hidden after:clear-both after:block after:content-['']">
-                  <!--First item-->
-                  <div
-                    class="relative float-left -mr-[100%] w-full transition-transform duration-[600ms] ease-in-out motion-reduce:transition-none"
-                    data-twe-carousel-item
-                    data-twe-carousel-active>
-                    <img
-                      src="https://mdbcdn.b-cdn.net/img/new/slides/041.webp"
-                      class="block w-full object-cover h-full"
-                      alt="Wild Landscape" />
-                  </div>
-                  <!--Second item-->
-                  <div
-                    class="relative float-left -mr-[100%] hidden w-full transition-transform duration-[600ms] ease-in-out motion-reduce:transition-none"
-                    data-twe-carousel-item>
-                    <img
-                      src="https://mdbcdn.b-cdn.net/img/new/slides/042.webp"
-                      class="block w-full object-cover h-full"
-                      alt="Camera" />
-                  </div>
-                  <!--Third item-->
-                  <div
-                    class="relative float-left -mr-[100%] hidden w-full transition-transform duration-[600ms] ease-in-out motion-reduce:transition-none"
-                    data-twe-carousel-item>
-                    <img
-                      src="https://mdbcdn.b-cdn.net/img/new/slides/043.webp"
-                      class="block w-full object-cover h-full"
-                      alt="Exotic Fruits" />
+                <div class="relative h-screen bg-white shadow-lg overflow-hidden rounded-lg shadow-inner" data-twe-carousel-init>
+                  <!-- Carousel wrapper -->
+                  <div class="carousel-container relative flex transition-transform duration-500 ease-in-out w-full h-full" style="transform: translateX(0);">
+                    <!-- First item -->
+                    <div class="carousel-item relative flex-shrink-0 w-full h-full">
+                      <img src="https://psdfreebies.com/wp-content/uploads/2020/07/Kids-School-Admission-Flyer-PSD-Template-Preview.jpg" 
+                           class="block w-full h-full object-cover" alt="First Image" />
+                      <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                    </div>
+                    <!-- Second item -->
+                    <div class="carousel-item relative flex-shrink-0 w-full h-full">
+                      <img src="https://th.bing.com/th/id/OIP.6REoTayV8m0VqhXDA0VRCgHaHa?rs=1&pid=ImgDetMain" 
+                           class="block w-full h-full object-cover" alt="Second Image" />
+                      <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                    </div>
+                    <!-- Third item -->
+                    <div class="carousel-item relative flex-shrink-0 w-full h-full">
+                      <img src="https://th.bing.com/th/id/OIP.sJ26EgWpUjqdEybhpqajIwHaJP?rs=1&pid=ImgDetMain" 
+                           class="block w-full h-full object-cover" alt="Third Image" />
+                      <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                    </div>
                   </div>
                 </div>
-              </div>               
-            </div>
+              </div>
+              
         </div>          
     </x-slot>
 </x-App>
 
+
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const carouselItems = document.querySelectorAll('[data-twe-carousel-item]');
-    let activeIndex = 0;
-    const intervalTime = 2000; // 2 seconds interval to switch to next image
-
-    function showNextItem() {
-      // Hide current active item
-      carouselItems[activeIndex].classList.add('hidden');
-
-      // Move to next item
-      activeIndex = (activeIndex + 1) % carouselItems.length;
-
-      // Show the next item
-      carouselItems[activeIndex].classList.remove('hidden');
-    }
-
-    // Initial display setup
-    carouselItems[activeIndex].classList.remove('hidden');
-    setInterval(showNextItem, intervalTime); // Adjusts how frequently it moves to next image
-  });
-</script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const carouselContainer = document.querySelector('.carousel-container');
+      const carouselItems = document.querySelectorAll('.carousel-item');
+      const itemWidth = carouselItems[0].offsetWidth; // Width of a single item
+      let activeIndex = 0;
+      const intervalTime = 3000; // 3 seconds interval to switch to the next image
+  
+      function swipeToNext() {
+        // Update active index
+        activeIndex = (activeIndex + 1) % carouselItems.length;
+  
+        // Calculate new translateX value
+        const translateX = -activeIndex * itemWidth;
+  
+        // Apply the transform to swipe
+        carouselContainer.style.transform = `translateX(${translateX}px)`;
+      }
+  
+      // Set interval for the swipe effect
+      setInterval(swipeToNext, intervalTime);
+  
+      // Ensure correct dimensions are applied on window resize
+      window.addEventListener('resize', () => {
+        const newWidth = carouselItems[0].offsetWidth;
+        const translateX = -activeIndex * newWidth;
+        carouselContainer.style.transform = `translateX(${translateX}px)`;
+      });
+    });
+  </script>

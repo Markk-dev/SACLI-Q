@@ -1,39 +1,62 @@
-<!-- filepath: /d:/XAMPP/htdocs/SACLIQueue/resources/views/SelectWindowGroup.blade.php -->
 <x-Dashboard>
     <x-slot name="content">
         <div class="mt-8 p-4 sm:ml-64 dark:bg-gray-700 min-h-screen">
-            <div class="mt-8 p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">User Queues and Window Groups</h1>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">List of Queues and windows you have access to</h2>
-                <div class="mt-4">
-                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Queues</h2>
+            <div class="mt-8 p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                <!-- Header Section -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">User  Queues and Window Groups</h1>
+                    <p class="text-lg text-gray-600 dark:text-gray-400">List of queues and windows you have access to.</p>
+                </div>
+
+                <!-- Queues Section -->
+                <div class="mb-12">
+                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white ">Queues</h2>
+                    <div  class="text-white mb-8">Manage Queue and Window Availability</div>
                     @if ($queues->isNotEmpty())
-                        <ul class="list-disc list-inside">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach ($queues as $queue)
-                                <li class="text-gray-700 dark:text-gray-300">{{ $queue->name }}</li>
+                                <a href="{{ route('queue.manage', ['id' => $queue->id]) }}" class="block p-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-300">
+                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $queue->name }}</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Manage this queue</p>
+                                    <div class="mt-2 inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium
+                                    {{ $queue->status === 'open' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                    <div class="w-2 h-2 rounded-full mr-2 
+                                        {{ $queue->status === 'open' ? 'bg-green-500' : 'bg-red-500' }}"></div>
+                                    {{ ucfirst($queue->status) }}
+                                </div>
+                                </a>
                             @endforeach
-                        </ul>
+                        </div>
                     @else
-                        <p class="text-gray-700 dark:text-gray-300">No queues found.</p>
+                        <p class="text-gray-600 dark:text-gray-400">No queues found.</p>
                     @endif
                 </div>
-                <section class="mt-12">
-                    <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Window Groups</h2>
+
+                <!-- Window Groups Section -->
+                <div>
+                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Your Windows</h2>
+                    <div class="text-white mb-8">Setup your window and start queuing</div>
                     @if ($windowGroups->isNotEmpty())
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach ($windowGroups as $windowGroup)
-                                <a href="{{ route('QueuingDashboard', ['id' => $windowGroup->id]) }}" class="block p-6 bg-gray-50 border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800">
-                                    <h3 class="text-lg font-bold text-gray-800 dark:text-white">{{ $windowGroup->name }}</h3>
+                                <a href="{{ route('QueuingDashboard', ['id' => $windowGroup->id]) }}" class="block p-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-300">
+                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $windowGroup->name }}</h3>
                                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
                                         Belongs to Queue: <span class="font-semibold">{{ $windowGroup->queue->name }}</span>
                                     </p>
+                                    <div class="mt-2 inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium
+                                    {{ $windowGroup->status === 'open' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                    <div class="w-2 h-2 rounded-full mr-2 
+                                        {{ $windowGroup->status === 'open' ? 'bg-green-500' : 'bg-red-500' }}"></div>
+                                    {{ ucfirst($windowGroup->status) }}
+                                </div>
                                 </a>
                             @endforeach
                         </div>
                     @else
                         <p class="text-gray-600 dark:text-gray-400">No window groups found.</p>
                     @endif
-                </section>
+                </div>
             </div>
         </div>
     </x-slot>

@@ -10,7 +10,7 @@
                 </p>
                 
                 <div class="text-center">
-                    <p class="text-2xl text-gray-800 mb-4"><strong>Code:</strong> {{ $code }}</p>
+                    <p class="text-2xl text-gray-800 mb-4"><strong>Code:</strong> {{ $queued->code }}</p>
                     <p class="text-xl text-gray-600 mb-4"><strong>Name:</strong> {{ $queued->name ?? 'N/A' }}</p>
                     <p class="text-xl text-gray-600 mb-4"><strong>Window Group:</strong> {{ $queued->windowGroup->name }}</p>
                     <p class="text-xl text-gray-600 mb-4"><strong>Status:</strong> {{ $queued->status }}</p>

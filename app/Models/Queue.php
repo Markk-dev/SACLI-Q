@@ -18,4 +18,9 @@ class Queue extends Model
     {
         return $this->hasMany(WindowGroup::class);
     }
+
+    public function queued()
+    {
+        return $this->hasMany(Queued::class);
+    }
 }

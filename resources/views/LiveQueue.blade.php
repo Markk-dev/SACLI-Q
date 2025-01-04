@@ -11,6 +11,7 @@
                       </svg>
                     Calling
                   </h2>
+                  
                   @if ($windowGroups->isNotEmpty())
                       @foreach ($windowGroups as $windowGroup)
                           <div class="mb-6 p-5 border border-gray-200 rounded-lg shadow-sm bg-gray-50">
@@ -49,20 +50,22 @@
                       </svg>
                       Please prepare
                   </h2>
-                  @if ($queued->isNotEmpty())
-                      <ul class="pl-6 list-disc text-lg text-gray-700 space-y-2">
-                          @foreach ($queued as $queueItem)
-                              <li class="flex items-center text-lg">
-                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                      <path fill-rule="evenodd" d="M9 3a7 7 0 1114 14A7 7 0 019 3zm0 1a6 6 0 10-.001 12.001A6 6 0 009 4z" clip-rule="evenodd" />
-                                  </svg>
-                                  <span class="text-lg">{{ $queueItem->code }} - {{ $queueItem->created_at }}</span>
-                              </li>
-                          @endforeach
-                      </ul>
-                  @else
-                      <p class="text-lg text-gray-600">Queue Empty</p>
-                  @endif
+                  <div class="flex items-center justify-between mb-6">
+                    @if ($queued->isNotEmpty())
+                        <ul class="pl-6 list-disc text-lg text-gray-700 space-y-2">
+                            @foreach ($queued as $queueItem)
+                                <li class="flex items-center text-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M9 3a7 7 0 1114 14A7 7 0 019 3zm0 1a6 6 0 10-.001 12.001A6 6 0 009 4z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="text-lg">{{ $queueItem->code }} - {{ $queueItem->created_at }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="text-lg text-gray-600">Queue Empty</p>
+                    @endif
+                  </div>
                 </div>
               </div>
             </div>

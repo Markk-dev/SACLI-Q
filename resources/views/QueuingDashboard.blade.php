@@ -43,11 +43,15 @@
                     <section class="p-6 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md">
                         <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Details</h2>
                         <p class="text-gray-600 dark:text-gray-300 mb-2">
-                            <strong>Window Group:</strong> {{ $windowGroup->name }} - {{ $windowGroup->description }}
+                            <strong>Window For:</strong> {{ $windowGroup->name }} - {{ $windowGroup->description }}
                         </p>
                         <p class="text-gray-600 dark:text-gray-300">
                             <strong>Queue:</strong> {{ $windowGroup->queue->name }} 
                         </p>
+                        <div class="mt-6">
+                            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Number of tickets left: </h2>
+                            <p id="upcoming-tickets-count" class="text-lg text-gray-600 dark:text-gray-300"></p>
+                        </div>
                     </section>
                 </div>
                 
@@ -79,7 +83,7 @@
                         id="next-ticket"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded shadow-lg relative group transition duration-300 ease-in-out transform hover:scale-105"
                         title="Move to the next ticket in the queue">
-                        Next
+                        Get Next Ticket
                     </button>
                     <button 
                         id="next-ticket-hold"
@@ -94,21 +98,21 @@
                         Complete
                     </button>
                     <button 
-                        id="call-ticket"
-                        class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded shadow-lg relative group transition duration-300 ease-in-out transform hover:scale-105"
-                        title="Call the current ticket to the window">
-                        Call
-                    </button>
-                    <button 
                         id="hold-ticket"
                         class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded shadow-lg relative group transition duration-300 ease-in-out transform hover:scale-105"
                         title="Put the current ticket on hold">
                         Put on hold
                     </button>
+                    <button 
+                        id="call-ticket"
+                        class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded shadow-lg relative group transition duration-300 ease-in-out transform hover:scale-105"
+                        title="Call the current ticket to the window">
+                        Call
+                    </button>
                 </div>
             </section>
 
-            <!-- Queue Management Section -->
+            {{-- <!-- Queue Management Section -->
             <section class="mt-6 p-6 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md">
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Queue Management</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -123,59 +127,200 @@
                         Open Queue: {{ $windowGroup->queue->name }}
                     </button>
                 </div>
-            </section>
+            </section> --}}
+
+
+            <!-- Add HTML elements to display the tickets -->
+            <div class="mt-10 grid grid-cols-2 gap-6">
+                <!-- On-Hold Tickets Section -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-10">
+                    <h2 class="text-2xl font-extrabold text-gray-700 dark:text-white mb-6 text-center">
+                        🎟️ On-Hold Tickets
+                    </h2>
+                    <table id="on-hold-tickets" class="w-full rounded-lg bg-white dark:bg-gray-800  border-none rounded-lg shadow-md">
+                        <thead class="bg-gray-200 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 rounded-lg py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
+                                    Ticket Code
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-300 dark:divide-gray-700">
+                            <tr>
+                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300">No on-hold tickets available.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            
+                <!-- Completed Tickets Section -->
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-extrabold text-gray-800 dark:text-white mb-6 text-center">
+                        ✅ Recently Completed Tickets
+                    </h2>
+                    <table id="completed-tickets" class="w-full border-none bg-white dark:bg-gray-800 border rounded-lg shadow-md">
+                        <thead class="bg-gray-200 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm  rounded-lg font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
+                                    Ticket Code
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-300 dark:divide-gray-700">
+                            <tr>
+                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300">No completed tickets available.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+
         </div>
     </x-slot>
 </x-Dashboard>
 
-<script type="module">
- $(document).ready(function() {
-        let btnNext = $('#next-ticket');
+<!-- filepath: /d:/XAMPP/htdocs/SACLIQueue/resources/views/QueuingDashboard.blade.php -->
+<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+<script>
+    $(document).ready(function() {
         var token = "{{ session('token') }}";
         var windowGroupId = "{{ $windowGroup->id }}";
 
-        //Update Window Name
-        $('#window-form').on('submit', function(event) {
-            event.preventDefault();
-            var token = "{{ session('token') }}";
-            var windowName = $('#window-name').val();
-
+        function getCurrentTicketForWindow(windowGroupId) {
+            getTables();
             $.ajax({
-                url: "{{ route('updateWindowName', ['id' => $windowGroup->id]) }}",
-                method: 'POST',
+                url: "{{ route('getCurrentTicketForWindow', ['windowGroupId' => $windowGroup->id]) }}",
+                method: 'GET',
                 headers: {
                     'Authorization': 'Bearer ' + token,
                     'Accept': 'application/json'
                 },
-                data: {
-                    window_name: windowName,
-                    _token: "{{ csrf_token() }}"
-                },
                 success: function(response) {
-                    if(response.success) {
-                        location.reload();
-                        alert('Successfully updated window name');
+                    if (response.success) {
+                        $('#current-ticket-number').text(response.ticket_number ?? 'N/A');
+                        $('#current-ticket-name').text(response.name ?? 'N/A');
+
+                        $('#next-ticket').prop('disabled', true).addClass('opacity-60'); 
+                        $('#next-ticket-hold').prop('disabled', true).addClass('opacity-60');
+
+                        $('#complete-ticket').prop('disabled', false).removeClass('opacity-60');
+                        $('#hold-ticket').prop('disabled', false).removeClass('opacity-60');
+                        $('#call-ticket').prop('disabled', false).removeClass('opacity-60');
+
                     } else {
-                        alert('Failed to update window name');
+                        $('#current-ticket-number').text('N/A');
+                        $('#current-ticket-name').text('N/A');
+                        
+                        $('#next-ticket').prop('disabled', false).removeClass('opacity-60'); 
+                        $('#next-ticket-hold').prop('disabled', false).removeClass('opacity-60');
+
+                        $('#complete-ticket').prop('disabled', true).addClass('opacity-60');
+                        $('#hold-ticket').prop('disabled', true).addClass('opacity-60');
+                        $('#call-ticket').prop('disabled', true).addClass('opacity-60');
+
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#next-ticket').prop('disabled', false).removeClass('opacity-60'); 
+                    $('#next-ticket-hold').prop('disabled', false).removeClass('opacity-60');
+
+                    $('#complete-ticket').prop('disabled', true).addClass('opacity-60');
+                    $('#hold-ticket').prop('disabled', true).addClass('opacity-60');
+                    $('#call-ticket').prop('disabled', true).addClass('opacity-60');
+
+
+                    $('#current-ticket-number').text('N/A');
+                    $('#current-ticket-name').text('N/A');
+                    alert("Error while fetching current tickets");
+                }
+            });
+        }
+
+        function getTables() {
+            // Get upcoming tickets count
+            $.ajax({
+                url: "{{ route('getUpcomingTicketsCount', ['windowGroupId' => $windowGroup->id]) }}",
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        console.log(response);
+                        // Update the UI with upcoming tickets count
+                        $('#upcoming-tickets-count').text(response.upcoming_tickets_count);
+                    } else {
+                        alert(response.message);
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error("Error:", error);
-                    alert("Error while updating window name");
+                    alert("Error while fetching upcoming tickets count");
                 }
             });
-        });
 
-        //Get Next Person on the queue
-        btnNext.on('click', function(event) {
+            // Get all completed tickets
+                    // Get all completed tickets
+            $.ajax({
+                url: "{{ route('allTicketsCompleted', ['windowGroupId' => $windowGroup->id]) }}",
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        console.log(response);
+                        // Update the UI with completed tickets
+                        $('#completed-tickets tbody').html(
+                            response.tickets.map(ticket =>
+                                `<tr class="hover:bg-green-50 dark:hover:bg-green-900 transition-colors">
+                                    <td class="px-6 py-3 border-b text-gray-700 dark:text-gray-300 text-center font-medium">${ticket.code}</td>
+                                </tr>`
+                            ).join('')
+                        );
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                    alert("Error while fetching completed tickets");
+                }
+            });
+
+            // Get all on-hold tickets
+            $.ajax({
+                url: "{{ route('allTicketsOnHold', ['windowGroupId' => $windowGroup->id]) }}",
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        console.log(response);
+                        // Update the UI with on-hold tickets
+                        $('#on-hold-tickets tbody').html(
+                            response.tickets.map(ticket =>
+                                `<tr class="hover:bg-yellow-50 dark:hover:bg-yellow-900 transition-colors">
+                                    <td class="px-6 py-3 border-b text-gray-700 dark:text-gray-300 text-center font-medium">${ticket.code}</td>
+                                </tr>`
+                            ).join('')
+                        );
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                    alert("Error while fetching on-hold tickets");
+                }
+            });
+        }
+
+
+        // Get Next Person on the queue
+        $('#next-ticket').on('click', function(event) {
             event.preventDefault();
-            var req = $.get({
+            $.ajax({
                 url: "{{ route('getNextTicketForWindow', ['windowGroupId' => $windowGroup->id]) }}",
+                method: 'GET',
                 success: function(response) {
                     console.log(response);
-                    // btbNext.prop('disabled', true);
 
                     if(response.success) {
+                        getCurrentTicketForWindow(windowGroupId);
                         alert(response['message']);
                     } else {
                         alert(response['message']);
@@ -188,51 +333,76 @@
             });
         });
 
-        function getCurrentTicketForWindow(windowGroupId) {
+        // Get Next Person on hold
+        $('#next-ticket-hold').on('click', function(event) {
+            event.preventDefault();
             $.ajax({
-                url: "{{ route('getCurrentTicketForWindow', ['windowGroupId' => $windowGroup->id]) }}",
+                url: "{{ route('getFromTicketsOnHold', ['windowGroupId' => $windowGroup->id]) }}",
                 method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                },
                 success: function(response) {
-                    if (response.success) {
-                        console.log(response);
-                        $('#current-ticket-number').text(response.ticket_number ?? 'N/A');
-                        $('#current-ticket-name').text(response.name ?? 'N/A');
+                    console.log(response);
 
-                        $('#next-ticket').prop('disabled', true).addClass('opacity-60'); 
-                        $('#next-ticket-hold').prop('disabled', false).addClass('opacity-60');
-                        $('#complete-ticket').prop('disabled', false).removeClass('opacity-60');
-                        $('#call-ticket').prop('disabled', false).removeClass('opacity-60');
-                        $('#hold-ticket').prop('disabled', false).removeClass('opacity-60');
+                    if(response.success) {
+                        getCurrentTicketForWindow(windowGroupId);
+                        alert(response['message']);
                     } else {
-                        console.log(response.message);
-                        $('#current-ticket-number').text('N/A');
-                        $('#current-ticket-name').text('N/A');
-
-                        $('#next-ticket').prop('disabled', false).removeClass('opacity-60');
-                        $('#next-ticket-hold').prop('disabled', false).addClass('opacity-60');
-                        $('#complete-ticket').prop('disabled', true).addClass('opacity-60');
-                        $('#call-ticket').prop('disabled', true).addClass('opacity-60');
-                        $('#hold-ticket').prop('disabled', true).addClass('opacity-60');
+                        alert(response['message']);
                     }
                 },
                 error: function(xhr, status, error) {
-                    $('#next-ticket').prop('disabled', false).removeClass('opacity-60');
-                    $('#next-ticket-hold').prop('disabled', false).addClass('opacity-60');
-                    $('#complete-ticket').prop('disabled', true).addClass('opacity-60');
-                    $('#call-ticket').prop('disabled', true).addClass('opacity-60');
-                    $('#hold-ticket').prop('disabled', true).addClass('opacity-60');
-
-                    $('#current-ticket-number').text('N/A');
-                    $('#current-ticket-name').text('N/A');
-                    alert("Error while fetching current tickets");
+                    console.error("Error:", error);
+                    alert("Error while fetching data");
                 }
             });
-        }
+        });
 
+        // Complete the current ticket
+        $('#complete-ticket').on('click', function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: "{{ route('setToComplete', ['windowGroupId' => $windowGroup->id]) }}",
+                method: 'GET',
+                success: function(response) {
+                    console.log(response);
+
+                    if(response.success) {
+                        getCurrentTicketForWindow(windowGroupId);
+                        alert(response['message']);
+                    } else {
+                        alert(response['message']);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                    alert("Error while fetching data");
+                }
+            });
+        });
+
+        // Put the current ticket on hold
+        $('#hold-ticket').on('click', function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: "{{ route('setToHold', ['windowGroupId' => $windowGroup->id]) }}",
+                method: 'GET',
+                success: function(response) {
+                    console.log(response);
+
+                    if(response.success) {
+                        getCurrentTicketForWindow(windowGroupId);
+                        alert(response['message']);
+                    } else {
+                        alert(response['message']);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                    alert("Error while fetching data");
+                }
+            });
+        });
+
+        getTables();
         getCurrentTicketForWindow(windowGroupId);
     });
 </script>

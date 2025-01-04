@@ -1,3 +1,4 @@
+<!-- filepath: /d:/XAMPP/htdocs/SACLIQueue/resources/views/Ticketing.blade.php -->
 <x-App>
     <x-slot name="content">
         <div class="bg-gray-50 min-h-screen flex items-center justify-center px-6 lg:px-0">
@@ -17,10 +18,13 @@
                                 <div class="flex flex-wrap gap-6 justify-center">
                                     @foreach ($queue->windowGroups as $windowGroup)
                                         <div class="flex items-center w-full md:w-1/4">
-                                            <input id="window_group_{{ $windowGroup->id }}" name="window_group" type="radio" value="{{ $windowGroup->id }}" class="hidden peer" data-description="{{ $windowGroup->description }}">
+                                            <input id="window_group_{{ $windowGroup->id }}" name="window_group" type="radio" value="{{ $windowGroup->id }}" class="hidden peer" data-description="{{ $windowGroup->description }}" {{ $windowGroup->status === 'closed' ? 'disabled' : '' }}>
                                             <label for="window_group_{{ $windowGroup->id }}" 
-                                                   class="peer-checked:bg-indigo-100 peer-checked:border-indigo-600 peer-checked:shadow-md transition-all cursor-pointer flex items-center justify-center w-full h-40 px-8 py-6 bg-gray-100 border border-gray-300 text-gray-800 text-3xl font-bold rounded-lg hover:bg-gray-200">
+                                                   class="peer-checked:bg-indigo-100 peer-checked:border-indigo-600 peer-checked:shadow-md transition-all cursor-pointer flex items-center justify-center w-full h-40 px-8 py-6 {{ $windowGroup->status === 'closed' ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' : 'bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200' }} text-3xl font-bold rounded-lg">
                                                 {{ $windowGroup->name }}
+                                                @if ($windowGroup->status === 'closed')
+                                                    <span class="block text-sm text-red-500 mt-2">Not Available</span>
+                                                @endif
                                             </label>
                                         </div>
                                     @endforeach
@@ -30,7 +34,7 @@
 
                             <!-- Description -->
                             <div id="description" class="mt-4 p-4 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 text-lg">
-                                <strong>Hint:</strong> Select click item above to see details here.
+                                <strong>Hint:</strong> Select an item above to see details here.
                             </div>
 
                             <!-- Name Input -->
@@ -54,6 +58,7 @@
                 </div>
             </div>
         </div>
+        <x-ErrorAlert></x-ErrorAlert>
     </x-slot>
 </x-App>
 
@@ -77,6 +82,7 @@
         const radioButtons = document.querySelectorAll('input[name="window_group"]');
         const descriptionDiv = document.getElementById('description');
 
+        // Update description on radio button change
         radioButtons.forEach(radio => {
             radio.addEventListener('change', function () {
                 const description = this.getAttribute('data-description');

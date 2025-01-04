@@ -16,7 +16,8 @@ class queued extends Model
         'handled_by',
         'window_group_id',	
         'queue_id',
-        'called_at'
+        'called_at',
+        'completed_at',
 
     ];
 
@@ -25,6 +26,7 @@ class queued extends Model
         return $this->belongsTo(User::class, 'handled_by');
     }
 
+    
     public function windowGroup()
     {
         return $this->belongsTo(WindowGroup::class);

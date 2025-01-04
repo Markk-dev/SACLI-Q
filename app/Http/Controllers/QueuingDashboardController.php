@@ -69,69 +69,53 @@ class QueuingDashboardController extends Controller
         return view('Ticketing',compact('queue'));
     }
 
-    public function ticketingSubmit(Request $request){
+    public function ticketingSubmit(Request $request)
+    {
         // Validate the request data
         $request->validate([
             'queue_id' => 'required|exists:queues,id',
             'window_group' => 'required|exists:window_groups,id',
             'name' => 'nullable|string|max:255',
+        ], [
+            'window_group.required' => 'Please select what window to queue',
+            'window_group.exists' => 'The selected window group does not exist',
         ]);
 
-        // Generate a unique 5-digit hex code
+        // Generate a unique 6-character hex code
         do {
-            $code = strtoupper(Str::random(5));
+            $code = strtoupper(dechex(random_int(1048576, 16777215))); // Generates a 6-char hex
         } while (Queued::where('code', $code)
                         ->whereDate('created_at', Carbon::today())
                         ->exists());
-        // Create a new queued record
-        $queued = new Queued();
-        $queued->queue_id = $request->queue_id;
-        $queued->window_group_id = $request->window_group;
-        $queued->name = $request->name;
-        $queued->status = 'Waiting';
-        $queued->code = $code;
-        $queued->save();
-
-        return view('TicketReceipt', compact('code', 'queued'));
+    
+        try {
+            // Create a new queued record
+            $queued = Queued::create([
+                'queue_id' => $request->queue_id,
+                'window_group_id' => $request->window_group,
+                'name' => $request->name,
+                'status' => "Waiting", 
+                'code' => $code,
+            ]);
+    
+            return redirect()->route('ticketing.success', ['id' => $queued->id]);
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'An error occurred while creating the ticket.']);
+        }
     }
-
-
+    
+    public function ticketingSuccess($id)
+    {
+        $queued = Queued::findOrFail($id);
+        return view('TicketReceipt', compact('queued'));
+    }
+    
 
 
     //API Methods
-    public function getWindowGroupsWithQueuedPeople($id)
-    {
-        $queue = Queue::with('windowGroups')->findOrFail($id);
-
-        // Get people who are queued on each WindowGroup with the status of "Calling"
-        $windowGroups = $queue->windowGroups->map(function ($windowGroup) {
-            $windowGroup->queuedPeople = Queued::where('window_group_id', $windowGroup->id)
-                                                ->where('status', 'Waiting')
-                                                ->with('user') // Eager load the user handling the queued person
-                                                ->get();
-            return $windowGroup;
-        });
-
-        return response()->json($windowGroups);
-    }
-
-    public function getWindowGroupsWithQueuedPeopleOnHold($id) {
-        $queue = Queue::with('windowGroups')->findOrFail($id);
-
-        // Get people who are queued on each WindowGroup with the status of "Calling"
-        $windowGroups = $queue->windowGroups->map(function ($windowGroup) {
-            $windowGroup->queuedPeople = Queued::where('window_group_id', $windowGroup->id)
-                                                ->where('status', 'On Hold')
-                                                ->with('user') // Eager load the user handling the queued person
-                                                ->get();
-            return $windowGroup;
-        });
-
-        return response()->json($windowGroups);
-    }
-
     //For setting window name
     public function updateWindow(Request $request, $id)  {
+
         $windowGroupId = $id;
         $user_id = Auth::user()->id;
  
@@ -153,9 +137,9 @@ class QueuingDashboardController extends Controller
                 'message' => 'Window Name Updated'
             ], 200);
          }
-     }
+    }
 
-    //For button "Next Ticket"
+     //For button "Next Ticket"
     public function getNextTicketForWindow($windowGroupId)
     {
         //Check if user is authenticated
@@ -205,10 +189,12 @@ class QueuingDashboardController extends Controller
             //Update Ticket Status
             $queued->status = 'Calling';
             $queued->handled_by = $user_id;
+            $queued->called_at = Carbon::now();
             $queued->save();
 
             return response()->json([
                 'success'=>true, 
+                'message'=> "Successfully called the next ticket",
                 'data' =>$queued
             ], 200);
         }
@@ -223,6 +209,7 @@ class QueuingDashboardController extends Controller
        $onCall = Queued::where('window_group_id', $windowGroupId)
            ->where('handled_by', $user_id)
            ->where('status', 'Calling')
+           ->whereDate('created_at', Carbon::today())
            ->first();
 
        if ($onCall) {
@@ -237,5 +224,140 @@ class QueuingDashboardController extends Controller
                'message' => 'No tickets are currently being called.'
            ]);
        }
-   }
+    }
+
+    
+   //Set the completed status of the ticket
+   public function setToComplete($windowGroupId)
+    {
+        $user_id = Auth::id();
+        $queued = Queued::where('window_group_id', $windowGroupId)
+                        ->where('handled_by', $user_id)
+                        ->where('status', 'Calling')
+                        ->first();
+
+        if ($queued) {
+            $queued->status = 'Completed';
+            $queued->completed_at = Carbon::now();
+            $queued->save();
+
+            return response()->json(['success' => true, 'message' => 'Ticket marked as completed.']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No ticket found to complete.']);
+        }
+    }
+
+    //Get the next ticket that is currently on hold
+    public function getNextOnHoldTicket($windowGroupId)
+    {
+        //Check if user is authenticated
+        $user_id = Auth::user()->id;
+
+        //Ensure that the user is not handling a ticket currently 
+        $onCall = Queued::where('window_group_id', $windowGroupId)
+                        ->where('handled_by', $user_id)
+                        ->where('status', 'Calling')
+                        ->count();
+
+        if($onCall > 0){
+            return response()->json([
+                'success'=>false, 
+                'message' => 'Please finish the current ticket first.'], 200);
+        }
+
+        //Gets the next ticket for the given window group by status of On Hold
+        $queued = Queued::where('window_group_id', $windowGroupId)
+                        ->where('status', 'On Hold')
+                        ->orderBy('created_at', 'asc')
+                        ->first();
+
+        //Checks if is user has access to the window
+        $userHasAccess = WindowGroupAccess::where('user_id', $user_id)
+            ->where('window_group_id', $windowGroupId)->first();
+
+        if (!$userHasAccess || $userHasAccess == null) {
+            return response()->json([
+                'success'=>false, 
+                'message' => 'You do not have access to this window.
+            '], 200);
+
+        }else if($userHasAccess->window_name == null && $userHasAccess->window_name == ''){
+            return response()->json([
+                'success'=>false, 
+                'message' => 'Please Enter your window name first'
+            ], 200);
+
+        }else if($queued == null){
+            return response()->json([
+                'success'=>false, 
+                'message' => 'No more tickets to call.'
+            ], 200);
+        }
+        else{
+            //Update Ticket Status
+            $queued->status = 'Calling';
+            $queued->handled_by = $user_id;
+            $queued->save();
+
+            return response()->json([
+                'success'=>true, 
+                'message'=> "Successfully called the next ticket",
+                'data' =>$queued
+            ], 200);
+        }
+        
+    }
+
+    //Set the ticket to on hold status
+    public function putTicketOnHold($windowGroupId)
+    {
+        $user_id = Auth::id();
+        $queued = Queued::where('window_group_id', $windowGroupId)
+                        ->where('handled_by', $user_id)
+                        ->where('status', 'Calling')
+                        ->first();
+
+        if ($queued) {
+            $queued->status = 'On Hold';
+            $queued->save();
+
+            return response()->json(['success' => true, 'message' => 'Ticket put on hold.']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No ticket found to put on hold.']);
+        }
+    }
+
+
+    //Get all tickets that are currently on hold (10)
+    public function getAllTicketsOnHold($windowGroupId)
+    {
+        $tickets = Queued::where('window_group_id', $windowGroupId)
+                         ->where('status', 'On Hold')
+                         ->orderBy('completed_at', 'desc')
+                         ->get();
+
+        return response()->json(['success' => true, 'tickets' => $tickets]);
+    }
+
+    //get the count of all tickets that are upcoming
+    public function getUpcomingTicketsCount($windowGroupId)
+    {
+        $upcomingTicketsCount = Queued::where('window_group_id', $windowGroupId)
+                                      ->where('status', 'Waiting')
+                                      ->count();
+    
+        return response()->json(['success' => true, 'upcoming_tickets_count' => $upcomingTicketsCount]);
+    }
+
+    //get 10 most recent completed tickets
+    public function getAllCompletedTickets($windowGroupId)
+    {
+        $tickets = Queued::where('window_group_id', $windowGroupId)
+                         ->where('status', 'Completed')
+                         ->orderBy('completed_at', 'desc')
+                         ->limit(10)
+                         ->get();
+
+        return response()->json(['success' => true, 'tickets' => $tickets]);
+    }
 }

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Models\User;
 use App\Models\Queue;
+use App\Models\Queued;
 use App\Models\WindowGroup; 
 use App\Models\WindowGroupAccess; 
 class QueueController extends Controller
@@ -65,9 +66,13 @@ class QueueController extends Controller
     public function viewQueue($id)
     {
         $queue = Queue::with('windowGroups')->findOrFail($id);
-        return view('ViewQueueWindowGroups', compact('queue'));
+        $windowGroupIds = $queue->windowGroups->pluck('id');
+        $uniqueUserIds = WindowGroupAccess::whereIn('window_group_id', $windowGroupIds)->pluck('user_id')->unique();
+        $uniqueUsers = User::whereIn('id', $uniqueUserIds)->get();
+        $accessList = WindowGroupAccess::whereIn('window_group_id', $windowGroupIds)->get();
+        $userWindows = WindowGroupAccess::with('windowGroup')->whereIn('user_id', $uniqueUserIds)->get()->groupBy('user_id');
+        return view('ViewQueueWindowGroups', compact('queue', 'uniqueUsers', 'accessList', 'userWindows'));
     }
-    
     //view a window group of a queue to see who are the users who has access
     public function viewWindowGroup($id)
     {
@@ -144,5 +149,92 @@ class QueueController extends Controller
         })->get();
     
         return view('MyQueues', compact('queues', 'windowGroups'));
+    }
+
+    //Closing and opening of queue and windows For user and not admin
+    public function updateAccess(Request $request, $user_id, $queue_id)
+    {
+        $accessList = WindowGroupAccess::where('user_id', $user_id)
+                                        ->where('queue_id', $queue_id)
+                                        ->get();
+    
+        foreach ($accessList as $access) {
+            $access->can_close_own_window = $request->input('can_close_own_window', false);
+            $access->can_close_any_window = $request->input('can_close_any_window', false);
+            $access->can_close_queue = $request->input('can_close_queue', false);
+            $access->can_clear_queue = $request->input('can_clear_queue', false);
+            $access->save();
+        }
+    
+        return response()->json(['success' => true, 'message' => 'Access privileges updated successfully.']);
+    }
+
+    public function manageQueue($id)
+    {
+        $queue = Queue::with('windowGroups')->findOrFail($id);
+        return view('QueueDetails', compact('queue'));
+    }
+
+
+    public function toggleWindow(Request $request, $id)
+    {
+        $user = Auth::user();
+        $windowGroup = WindowGroup::findOrFail($id);
+        $queueId = $request->input('queue_id');
+        $access = WindowGroupAccess::where('user_id', $user->id)
+                                    ->where('queue_id', $queueId)
+                                    ->first();
+    
+        if (!$access || (!$access->can_close_own_window && !$access->can_close_any_window)) {
+            return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
+        }
+    
+        $windowGroup->status = $windowGroup->status === 'open' ? 'closed' : 'open';
+        $windowGroup->save();
+    
+        return response()->json(['success' => true, 'message' => 'Window status updated successfully.']);
+    }
+
+    public function toggleQueue($id)
+    {
+        $user = Auth::user();
+        $queue = Queue::findOrFail($id);
+        $access = WindowGroupAccess::where('user_id', $user->id)
+                                    ->where('queue_id', $id)
+                                    ->first();
+    
+        if (!$access || !$access->can_close_queue) {
+            return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
+        }
+    
+        $queue->status = $queue->status === 'open' ? 'closed' : 'open';
+        $queue->save();
+    
+        return response()->json(['success' => true, 'message' => 'Queue status updated successfully.']);
+    }
+    
+    public function clearQueue($id)
+    {
+        $user = Auth::user();
+        $queue = Queue::findOrFail($id);
+        $access = WindowGroupAccess::where('user_id', $user->id)
+                                    ->where('queue_id', $id)
+                                    ->first();
+    
+        if (!$access || !$access->can_clear_queue) {
+            return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
+        }
+    
+        $waitingItems = $queue->queued()->where('status', 'Waiting')->get();
+    
+        if ($waitingItems->isEmpty()) {
+            return response()->json(['success' => true, 'message' => 'No items with status "Waiting" found.']);
+        }
+    
+        $queue->queued()->where('status', 'Waiting')->update([
+            'status' => 'Completed'
+        ]);
+    
+        return response()->json(['success' => true, 'message' => 'Queue cleared successfully.']);
     }
 }

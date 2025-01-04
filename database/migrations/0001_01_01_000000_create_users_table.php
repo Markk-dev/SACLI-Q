@@ -69,6 +69,7 @@ return new class extends Migration
             $table->foreignId('window_group_id')->constrained('window_groups')->onDelete('cascade');
             $table->foreignId('queue_id')->constrained('queues')->onDelete('cascade');
             $table->timestamp('called_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
     }

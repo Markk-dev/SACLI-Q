@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Queue;
-use App\Models\Queued;
-use App\Models\WindowGroup; 
-use App\Models\WindowGroupAccess; 
+use App\Models\Ticket;
+use App\Models\Window; 
+use App\Models\WindowAccess; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -19,54 +19,58 @@ class QueuingDashboardController extends Controller
     //Showing the dashboard
     public function dashboard(Request $request, $id){
         $user_id = Auth::user()->id;
-        // Fetch the WindowGroup and its associated Queue using the provided ID
-        $windowGroup = WindowGroup::with('queue')->findOrFail($id);
+        // Fetch the Window and its associated Queue using the provided ID
+        $window = Window::with('queue')->findOrFail($id);
 
-        $window = WindowGroupAccess::where('user_id', $user_id)
-        ->where('window_group_id', $windowGroup->id)->first();
+        //This is 
+        $windowAccess = WindowAccess::where('user_id', $user_id)
+        ->where('window_id', $window->id)->first();
 
-        if($windowGroup == null){
+        if($window == null || $windowAccess==null){
             return redirect()->route('myQueues')->with('error', 'You do not have access to this window.');
         }else{
             // Pass the fetched data to the view
-            return view('QueuingDashboard', compact('windowGroup', 'window'));
+            return view('user.QueuingDashboard', compact('windowAccess', 'window'));
         }
     }
 
+
+
+    //Public Methods
     public function liveQueue($id)
     {
-        $queue = Queue::with('windowGroups')->findOrFail($id);
+        $queue = Queue::with('Windows')->findOrFail($id);
 
-        // Get people who are queued on each WindowGroup with the status of "Calling"
-        $windowGroups = $queue->windowGroups->map(function ($windowGroup) {
-            $windowGroup->queuedPeople = Queued::where('window_group_id', $windowGroup->id)
+        // Get people who are Ticket on each Window with the status of "Calling"
+        $Windows = $queue->Windows->map(function ($Window) {
+            $Window->TicketPeople = Ticket::where('window_id', $Window->id)
                                                 ->where('status', 'Calling')
-                                                ->with('user') // Eager load the user handling the queued person
+                                                ->with('user') // Eager load the user handling the Ticket person
                                                 ->get();
 
-            // Join with window_group_access to get window_name
-            $windowGroupAccess = WindowGroupAccess::where('window_group_id', $windowGroup->id)
+            // Join with window_access to get window_name
+            $WindowAccess = WindowAccess::where('window_id', $Window->id)
                                                   ->first();
-            $windowGroup->window_name = $windowGroupAccess ? $windowGroupAccess->window_name : null;
+            $Window->window_name = $WindowAccess ? $WindowAccess->window_name : null;
 
-            return $windowGroup;
+            return $Window;
         });
         
-        // Get 7 oldest queued records with status "Waiting"
-        $queued = Queued::where('queue_id', $id)
+        // Get 7 oldest Ticket records with status "Waiting"
+        $Ticket = Ticket::where('queue_id', $id)
                         ->where('status', 'Waiting')
                         ->orderBy('created_at', 'asc')
                         ->take(8)
-                        ->with('user') // Eager load the user handling the queued person
+                        ->with('user') // Eager load the user handling the Ticket person
                         ->get();
 
         // Pass the fetched data to the view
-        return view('LiveQueue', compact('queue', 'windowGroups', 'queued'));
+        return view('public.LiveQueue', compact('queue', 'Windows', 'Ticket'));
     }
     function ticketing($id){
-        $queue = Queue::with('windowGroups')->findOrFail($id);
+        $queue = Queue::with('Windows')->findOrFail($id);
 
-        return view('Ticketing',compact('queue'));
+        return view('public.Ticketing',compact('queue'));
     }
 
     public function ticketingSubmit(Request $request)
@@ -74,31 +78,30 @@ class QueuingDashboardController extends Controller
         // Validate the request data
         $request->validate([
             'queue_id' => 'required|exists:queues,id',
-            'window_group' => 'required|exists:window_groups,id',
+            'window' => 'required|exists:windows,id',
             'name' => 'nullable|string|max:255',
         ], [
-            'window_group.required' => 'Please select what window to queue',
-            'window_group.exists' => 'The selected window group does not exist',
+            'window.required' => 'Please select what window to queue',
+            'window.exists' => 'The selected window group does not exist',
         ]);
 
         // Generate a unique 6-character hex code
         do {
             $code = strtoupper(dechex(random_int(1048576, 16777215))); // Generates a 6-char hex
-        } while (Queued::where('code', $code)
-                        ->whereDate('created_at', Carbon::today())
+        } while (Ticket::where('code', $code)
                         ->exists());
     
         try {
-            // Create a new queued record
-            $queued = Queued::create([
+            // Create a new Ticket record
+            $Ticket = Ticket::create([
                 'queue_id' => $request->queue_id,
-                'window_group_id' => $request->window_group,
+                'window_id' => $request->window,
                 'name' => $request->name,
                 'status' => "Waiting", 
                 'code' => $code,
             ]);
     
-            return redirect()->route('ticketing.success', ['id' => $queued->id]);
+            return redirect()->route('ticketing.success', ['id' => $Ticket->id]);
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'An error occurred while creating the ticket.']);
         }
@@ -106,47 +109,52 @@ class QueuingDashboardController extends Controller
     
     public function ticketingSuccess($id)
     {
-        $queued = Queued::findOrFail($id);
-        return view('TicketReceipt', compact('queued'));
-    }
+        $Ticket = Ticket::with('window')->findOrFail($id);
     
+        return view('public.TicketReceipt', compact('Ticket'));
+    }
 
 
     //API Methods
     //For setting window name
-    public function updateWindow(Request $request, $id)  {
+    public function updateWindow(Request $request, $id)
+{
+    $request->validate([
+        'window_name' => 'required|string|max:255',
+    ]);
 
-        $windowGroupId = $id;
-        $user_id = Auth::user()->id;
- 
- 
-         $window = WindowGroupAccess::where('user_id', $user_id)
-             ->where('window_group_id', $windowGroupId)->first();
- 
-         if($window == null){
-             return response()->json([
-                'success'=>false, 
-                'message' => 'You do not have access to this window.'
-            ], 200);
-         }else{
-             $window->window_name = $request->window_name;
-             $window->save();
- 
-             return response()->json([
-                'success'=>true, 
-                'message' => 'Window Name Updated'
-            ], 200);
-         }
+    $WindowId = $id;
+    $user_id = Auth::user()->id;
+
+    $window = WindowAccess::where('user_id', $user_id)
+        ->where('window_id', $WindowId)
+        ->first();
+
+    if ($window === null) {
+        return response()->json([
+            'success' => false,
+            'message' => 'You do not have access to this window.',
+        ], 403);
     }
 
+    $window->window_name = $request->window_name;
+    $window->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Window Name Updated',
+    ], 200);
+}
+
+
      //For button "Next Ticket"
-    public function getNextTicketForWindow($windowGroupId)
+    public function getNextTicketForWindow($WindowId)
     {
         //Check if user is authenticated
         $user_id = Auth::user()->id;
 
         //Number of On Called by Window
-        $onCalled = Queued::where('window_group_id', $windowGroupId)
+        $onCalled = Ticket::where('window_id', $WindowId)
                         ->where('handled_by', $user_id)
                         ->where('status', 'Calling')
                         ->count();
@@ -158,14 +166,14 @@ class QueuingDashboardController extends Controller
         }
 
         //Gets the next ticket for the given window group
-        $queued = Queued::where('window_group_id', $windowGroupId)
+        $Ticket = Ticket::where('window_id', $WindowId)
                         ->where('status', 'Waiting')
                         ->orderBy('created_at', 'asc')
                         ->first();
 
         //Check is user has access to the window
-        $userHasAccess = WindowGroupAccess::where('user_id', $user_id)
-            ->where('window_group_id', $windowGroupId)->first();
+        $userHasAccess = WindowAccess::where('user_id', $user_id)
+            ->where('window_id', $WindowId)->first();
 
         if (!$userHasAccess || $userHasAccess == null) {
             return response()->json([
@@ -179,7 +187,7 @@ class QueuingDashboardController extends Controller
                 'message' => 'Please Enter your window name first'
             ], 200);
 
-        }else if($queued == null){
+        }else if($Ticket == null){
             return response()->json([
                 'success'=>false, 
                 'message' => 'No more tickets to call.'
@@ -187,15 +195,15 @@ class QueuingDashboardController extends Controller
         }
         else{
             //Update Ticket Status
-            $queued->status = 'Calling';
-            $queued->handled_by = $user_id;
-            $queued->called_at = Carbon::now();
-            $queued->save();
+            $Ticket->status = 'Calling';
+            $Ticket->handled_by = $user_id;
+            $Ticket->called_at = Carbon::now();
+            $Ticket->save();
 
             return response()->json([
                 'success'=>true, 
                 'message'=> "Successfully called the next ticket",
-                'data' =>$queued
+                'data' =>$Ticket
             ], 200);
         }
         
@@ -203,10 +211,10 @@ class QueuingDashboardController extends Controller
 
    
    //Get Current Ticket For Window
-    public function getCurrentTicketForWindow($windowGroupId)
+    public function getCurrentTicketForWindow($WindowId)
     {
        $user_id = Auth::user()->id;
-       $onCall = Queued::where('window_group_id', $windowGroupId)
+       $onCall = Ticket::where('window_id', $WindowId)
            ->where('handled_by', $user_id)
            ->where('status', 'Calling')
            ->whereDate('created_at', Carbon::today())
@@ -228,18 +236,18 @@ class QueuingDashboardController extends Controller
 
     
    //Set the completed status of the ticket
-   public function setToComplete($windowGroupId)
+   public function setToComplete($WindowId)
     {
         $user_id = Auth::id();
-        $queued = Queued::where('window_group_id', $windowGroupId)
+        $Ticket = Ticket::where('window_id', $WindowId)
                         ->where('handled_by', $user_id)
                         ->where('status', 'Calling')
                         ->first();
 
-        if ($queued) {
-            $queued->status = 'Completed';
-            $queued->completed_at = Carbon::now();
-            $queued->save();
+        if ($Ticket) {
+            $Ticket->status = 'Completed';
+            $Ticket->completed_at = Carbon::now();
+            $Ticket->save();
 
             return response()->json(['success' => true, 'message' => 'Ticket marked as completed.']);
         } else {
@@ -248,13 +256,13 @@ class QueuingDashboardController extends Controller
     }
 
     //Get the next ticket that is currently on hold
-    public function getNextOnHoldTicket($windowGroupId)
+    public function getNextOnHoldTicket($WindowId)
     {
         //Check if user is authenticated
         $user_id = Auth::user()->id;
 
         //Ensure that the user is not handling a ticket currently 
-        $onCall = Queued::where('window_group_id', $windowGroupId)
+        $onCall = Ticket::where('window_id', $WindowId)
                         ->where('handled_by', $user_id)
                         ->where('status', 'Calling')
                         ->count();
@@ -266,14 +274,14 @@ class QueuingDashboardController extends Controller
         }
 
         //Gets the next ticket for the given window group by status of On Hold
-        $queued = Queued::where('window_group_id', $windowGroupId)
+        $Ticket = Ticket::where('window_id', $WindowId)
                         ->where('status', 'On Hold')
                         ->orderBy('created_at', 'asc')
                         ->first();
 
         //Checks if is user has access to the window
-        $userHasAccess = WindowGroupAccess::where('user_id', $user_id)
-            ->where('window_group_id', $windowGroupId)->first();
+        $userHasAccess = WindowAccess::where('user_id', $user_id)
+            ->where('window_id', $WindowId)->first();
 
         if (!$userHasAccess || $userHasAccess == null) {
             return response()->json([
@@ -287,7 +295,7 @@ class QueuingDashboardController extends Controller
                 'message' => 'Please Enter your window name first'
             ], 200);
 
-        }else if($queued == null){
+        }else if($Ticket == null){
             return response()->json([
                 'success'=>false, 
                 'message' => 'No more tickets to call.'
@@ -295,31 +303,31 @@ class QueuingDashboardController extends Controller
         }
         else{
             //Update Ticket Status
-            $queued->status = 'Calling';
-            $queued->handled_by = $user_id;
-            $queued->save();
+            $Ticket->status = 'Calling';
+            $Ticket->handled_by = $user_id;
+            $Ticket->save();
 
             return response()->json([
                 'success'=>true, 
                 'message'=> "Successfully called the next ticket",
-                'data' =>$queued
+                'data' =>$Ticket
             ], 200);
         }
         
     }
 
     //Set the ticket to on hold status
-    public function putTicketOnHold($windowGroupId)
+    public function putTicketOnHold($WindowId)
     {
         $user_id = Auth::id();
-        $queued = Queued::where('window_group_id', $windowGroupId)
+        $Ticket = Ticket::where('window_id', $WindowId)
                         ->where('handled_by', $user_id)
                         ->where('status', 'Calling')
                         ->first();
 
-        if ($queued) {
-            $queued->status = 'On Hold';
-            $queued->save();
+        if ($Ticket) {
+            $Ticket->status = 'On Hold';
+            $Ticket->save();
 
             return response()->json(['success' => true, 'message' => 'Ticket put on hold.']);
         } else {
@@ -329,9 +337,9 @@ class QueuingDashboardController extends Controller
 
 
     //Get all tickets that are currently on hold (10)
-    public function getAllTicketsOnHold($windowGroupId)
+    public function getAllTicketsOnHold($WindowId)
     {
-        $tickets = Queued::where('window_group_id', $windowGroupId)
+        $tickets = Ticket::where('window_id', $WindowId)
                          ->where('status', 'On Hold')
                          ->orderBy('completed_at', 'desc')
                          ->get();
@@ -340,9 +348,9 @@ class QueuingDashboardController extends Controller
     }
 
     //get the count of all tickets that are upcoming
-    public function getUpcomingTicketsCount($windowGroupId)
+    public function getUpcomingTicketsCount($WindowId)
     {
-        $upcomingTicketsCount = Queued::where('window_group_id', $windowGroupId)
+        $upcomingTicketsCount = Ticket::where('window_id', $WindowId)
                                       ->where('status', 'Waiting')
                                       ->count();
     
@@ -350,9 +358,9 @@ class QueuingDashboardController extends Controller
     }
 
     //get 10 most recent completed tickets
-    public function getAllCompletedTickets($windowGroupId)
+    public function getAllCompletedTickets($WindowId)
     {
-        $tickets = Queued::where('window_group_id', $windowGroupId)
+        $tickets = Ticket::where('window_id', $WindowId)
                          ->where('status', 'Completed')
                          ->orderBy('completed_at', 'desc')
                          ->limit(10)

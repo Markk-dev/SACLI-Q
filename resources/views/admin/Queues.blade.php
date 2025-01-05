@@ -13,7 +13,8 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-between items-center">
-                    <form method="GET" action="{{ route('manageQueues') }}" class="w-full sm:w-auto sm:mr-4">
+                    {{-- Search Form --}}
+                    <form method="GET" action="{{ route('admin.queue.list') }}" class="w-full sm:w-auto sm:mr-4">
                         <div class="flex items-center w-full sm:w-auto mt-4">
                             <input type="text" name="search" placeholder="Search queues..." class="w-full sm:w-96 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
                             <button type="submit" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Search</button>
@@ -39,7 +40,7 @@
                         <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                             <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                                 <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Create New Queue</h1>
-                                <form id="createQueueForm" class="mt-4" action="{{ route('createQueue') }}" method="POST">
+                                <form id="createQueueForm" class="mt-4" action="{{ route('admin.queue.create') }}" method="POST">
                                     @csrf
                                     <div class="mb-4">
                                         <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Queue Name</label>
@@ -112,12 +113,12 @@
                                         {{ $queue->name }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <a href="{{route('queue.view',['id'=>$queue->id])}}" class="text-grey-600 hover:text-indigo-500 flex items-center">
+                                        <a href="{{route('admin.queue.view',['id'=>$queue->id])}}" class="text-grey-600 hover:text-indigo-500 flex items-center">
                                             <i class="fas fa-eye mr-2"></i> View
                                         </a>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <form action="{{ route('queue.delete', ['id' => $queue->id]) }}" method="POST" class="inline">
+                                        <form action="{{ route('admin.queue.delete', ['id' => $queue->id]) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:text-red-900 flex items-center">

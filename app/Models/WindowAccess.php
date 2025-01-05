@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class WindowGroupAccess extends Model
+class WindowAccess extends Model
 {
-    protected $table = 'window_group_access';
+    protected $table = 'window_access';
     public $timestamps = true;
     protected $fillable = [
         'queue_id',
@@ -24,8 +24,8 @@ class WindowGroupAccess extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function windowGroup()
+    public function window()
     {
-        return $this->belongsTo(WindowGroup::class);
+        return $this->belongsTo(Window::class);
     }
 }

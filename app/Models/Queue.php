@@ -14,13 +14,13 @@ class Queue extends Model
         'status'
     ];
 
-    public function windowGroups(): HasMany
+    public function windows(): HasMany
     {
-        return $this->hasMany(WindowGroup::class);
+        return $this->hasMany(Window::class);
     }
 
     public function queued()
     {
-        return $this->hasMany(Queued::class);
+        return $this->hasMany(Ticket::class);
     }
 }

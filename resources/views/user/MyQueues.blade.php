@@ -36,19 +36,19 @@
                 <div>
                     <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Your Windows</h2>
                     <div class="text-white mb-8">Setup your window and start queuing</div>
-                    @if ($windowGroups->isNotEmpty())
+                    @if ($windows->isNotEmpty())
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            @foreach ($windowGroups as $windowGroup)
-                                <a href="{{ route('QueuingDashboard', ['id' => $windowGroup->id]) }}" class="block p-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-300">
-                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $windowGroup->name }}</h3>
+                            @foreach ($windows as $window)
+                                <a href="{{ route('QueuingDashboard', ['id' => $window->id]) }}" class="block p-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-300">
+                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $window->name }}</h3>
                                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                        Belongs to Queue: <span class="font-semibold">{{ $windowGroup->queue->name }}</span>
+                                        Belongs to Queue: <span class="font-semibold">{{ $window->queue->name }}</span>
                                     </p>
                                     <div class="mt-2 inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium
-                                    {{ $windowGroup->status === 'open' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                    {{ $window->status === 'open' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
                                     <div class="w-2 h-2 rounded-full mr-2 
-                                        {{ $windowGroup->status === 'open' ? 'bg-green-500' : 'bg-red-500' }}"></div>
-                                    {{ ucfirst($windowGroup->status) }}
+                                        {{ $window->status === 'open' ? 'bg-green-500' : 'bg-red-500' }}"></div>
+                                    {{ ucfirst($window->status) }}
                                 </div>
                                 </a>
                             @endforeach

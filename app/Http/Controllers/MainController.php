@@ -52,8 +52,7 @@ class MainController extends Controller
 
     //Homepage dashboard
     function dashboard(){
-        // dd(session()->all());
-        return view('Homepage');
+        return view('user.dashboard');
      }
 
 
@@ -69,7 +68,7 @@ class MainController extends Controller
 
         $users = $query->paginate(10);
 
-        return view('UserManagement', ['users' => $users]);
+        return view('admin.users', ['users' => $users]);
     }
 
      function createAccount(Request $request){
@@ -101,6 +100,6 @@ class MainController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
 
-        return redirect()->route('users')->with('success', 'Account deleted successfully.');
+        return redirect()->route('user.list')->with('success', 'Account deleted successfully.');
     }
 }

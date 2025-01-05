@@ -1,4 +1,3 @@
-<!-- filepath: /d:/XAMPP/htdocs/SACLIQueue/resources/views/ViewWindowGroup.blade.php -->
 <x-Dashboard>
     <x-slot name="content">
         <div class="mt-12 pt-4 sm:ml-64 dark:bg-gray-700 min-h-screen">
@@ -9,7 +8,7 @@
                         <div class="flex items-center space-x-4">
                             <i class="fas fa-window-maximize text-3xl text-blue-600"></i>
                             <div>
-                                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ $windowGroup->name }}</h1>
+                                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ $window->name }}</h1>
                                 <span class="text-md text-gray-500 dark:text-gray-400">Window Details</span>
                             </div>
                         </div>
@@ -17,17 +16,18 @@
                     <div class="px-6 py-4">
                         <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Description</h2>
                         <p class="text-sm text-gray-700 dark:text-gray-300">
-                            {{ $windowGroup->description }}
+                            {{ $window->description }}
                         </p>
                     </div>
                 </div>
+
                 <!-- Assign Users Card -->
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
                     <div class="px-6 py-8 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Assign Users</h2>
                     </div>
                     <div class="px-6 py-4">
-                        <form action="{{ route('windowGroups.assignUser', ['id' => $windowGroup->id]) }}" method="POST">
+                        <form action="{{ route('admin.window.user.add', ['id' => $window->id]) }}" method="POST">
                             @csrf
                             <div class="mb-4">
                                 <label for="user_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select User</label>
@@ -72,7 +72,7 @@
                                                     {{ $user->name }}
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                    <form action="{{ route('windowGroups.removeUser', ['id' => $windowGroup->id, 'user_id' => $user->id]) }}" method="POST" class="inline">
+                                                    <form action="{{ route('admin.window.user.remove', ['id' => $window->id, 'user_id' => $user->id]) }}" method="POST" class="inline">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="text-red-600 hover:text-red-900">
@@ -90,16 +90,7 @@
                         @endif
                     </div>
                 </div>
-
-
             </div>
         </div>
     </x-slot>
 </x-Dashboard>
-
-<style>
-    .text-indigo-600:hover .fas {
-        transform: scale(1.2);
-        transition: transform 0.2s ease-in-out;
-    }
-</style>

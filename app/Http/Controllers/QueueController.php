@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Models\User;
 use App\Models\Queue;
-use App\Models\Queued;
-use App\Models\WindowGroup; 
-use App\Models\WindowGroupAccess; 
+use App\Models\Ticket;
+use App\Models\Window; 
+use App\Models\WindowAccess; 
 class QueueController extends Controller
 {
     // Managing Queues
-    //View 
-    public function manageQueues(Request $request)
+    // definition of ('admin.queue.list)
+    public function adminQueues(Request $request)
     {
         $query = Queue::query();
 
@@ -23,13 +23,13 @@ class QueueController extends Controller
             $query->where('name', 'LIKE', "%{$search}%");
         }
 
-        $queues = $query->with('windowGroups')->paginate(10);
-        $windowGroups = WindowGroup::all();
+        $queues = $query->with('Windows')->paginate(10);
+        $Windows = Window::all();
 
-        return view('QueueManagement', compact('queues', 'windowGroups'));
+        return view('admin.queues', compact('queues', 'Windows'));
     }
 
-    //Create a new queue
+    //Create/ Delete a queue a new queue and redirect to route('admin.queue.list')
     public function createQueue(Request $request)
     {
         $request->validate([
@@ -44,45 +44,46 @@ class QueueController extends Controller
         $queue->save();
     
         if($request->window_groups != null){
-            foreach ($request->window_groups as $windowGroupData) {
-                $windowGroup = new WindowGroup($windowGroupData);
-                $queue->windowGroups()->save($windowGroup);
+            foreach ($request->window_groups as $WindowData) {
+                $Window = new Window($WindowData);
+                $queue->Windows()->save($Window);
             }
         }
     
-        return redirect()->route('manageQueues')->with('success', 'Queue created successfully.');
+        return redirect()->route('admin.queue.list')->with('success', 'Queue created successfully.');
     }
-
-    //Delete a queue
     public function deleteQueue($id)
     {
         $queue = Queue::findOrFail($id);
         $queue->delete();
 
-        return redirect()->route('manageQueues')->with('success', 'Queue deleted successfully.');
+        return redirect()->route('admin.queue.list')->with('success', 'Queue deleted successfully.');
     }
 
-    //To see associated queue window groups and other data
+    //To see associated queue windows and other data
     public function viewQueue($id)
     {
-        $queue = Queue::with('windowGroups')->findOrFail($id);
-        $windowGroupIds = $queue->windowGroups->pluck('id');
-        $uniqueUserIds = WindowGroupAccess::whereIn('window_group_id', $windowGroupIds)->pluck('user_id')->unique();
+        $queue = Queue::with('Windows')->findOrFail($id);
+        $WindowIds = $queue->Windows->pluck('id');
+        $uniqueUserIds = WindowAccess::whereIn('window_id', $WindowIds)->pluck('user_id')->unique();
         $uniqueUsers = User::whereIn('id', $uniqueUserIds)->get();
-        $accessList = WindowGroupAccess::whereIn('window_group_id', $windowGroupIds)->get();
-        $userWindows = WindowGroupAccess::with('windowGroup')->whereIn('user_id', $uniqueUserIds)->get()->groupBy('user_id');
-        return view('ViewQueueWindowGroups', compact('queue', 'uniqueUsers', 'accessList', 'userWindows'));
+        $accessList = WindowAccess::whereIn('window_id', $WindowIds)->get();
+        $userWindows = WindowAccess::with('Window')->whereIn('user_id', $uniqueUserIds)->get()->groupBy('user_id');
+        
+        return view('admin.QueueWindows', compact('queue', 'uniqueUsers', 'accessList', 'userWindows'));
     }
-    //view a window group of a queue to see who are the users who has access
-    public function viewWindowGroup($id)
+
+    //view a window  from a queue to see who are the users who has access
+    public function viewWindow($id)
     {
-        $windowGroup = WindowGroup::findOrFail($id);
-        $users = $windowGroup->users;
+        $window = Window::findOrFail($id);
+        $users = $window->users;
         $allUsers = User::all(); 
-        return view('ViewWindowGroup', compact('windowGroup', 'users', 'allUsers'));
+
+        return view('admin.window', compact('window', 'users', 'allUsers'));
     }
-    //Add another window group to a queue
-    public function addWindowGroup(Request $request, $queue_id)
+
+    public function createWindow(Request $request, $queue_id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -90,71 +91,50 @@ class QueueController extends Controller
         ]);
 
         $queue = Queue::findOrFail($queue_id);
-        $windowGroup = new WindowGroup([
+        $Window = new Window([
             'name' => $request->name,
             'description' => $request->description,
         ]);
-        $queue->windowGroups()->save($windowGroup);
+        $queue->Windows()->save($Window);
 
-        return redirect()->route('queue.view', ['id' => $queue_id])->with('success', 'Window group added successfully.');
+        return redirect()->route('admin.queue.view', ['id' => $queue_id])->with('success', 'Window group added successfully.');
     }
 
-    //Delete a window group from the queue
-    public function removeWindowGroup($id)
-    {
-        $windowGroup = WindowGroup::findOrFail($id);
-        $windowGroup->delete();
 
-        return redirect()->route('queue.view', ['id' => $windowGroup->queue_id])->with('success', 'Window group removed successfully.');
+    public function removeWindow($id)
+    {
+        $Window = Window::findOrFail($id);
+        $Window->delete();
+
+        return redirect()->route('admin.queue.view', ['id' => $Window->queue_id])->with('success', 'Window group removed successfully.');
     }
 
     //Adding and removing a users from a window group
-    public function assignUserToWindowGroup(Request $request, $id)
+    public function assignUserToWindow(Request $request, $id)
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
         ]);
     
-        $windowGroup = WindowGroup::findOrFail($id);
-        $windowGroup->users()->attach($request->user_id);
-    
-        return redirect()->route('windowGroups.view', ['id' => $id])->with('success', 'User assigned successfully.');
+        $Window = Window::findOrFail($id);
+        $Window->users()->attach($request->user_id,["queue_id" => $Window->queue_id]);
+
+        return redirect()->route('admin.window.view', ['id' => $id])->with('success', 'User assigned successfully.');
     }
 
-    //Removing a user from the window group
-    public function removeUserFromWindowGroup($id, $user_id)
-    {
-        $windowGroup = WindowGroup::findOrFail($id);
-        $windowGroup->users()->detach($user_id);
 
-        return redirect()->route('windowGroups.view', ['id' => $id])->with('success', 'User removed successfully.');
-    }
-
-    
-    public function myQueuesAndWindows()
+    public function removeUserFromWindow($id, $user_id)
     {
-        $accountId = Session::get('account_id');
-        if (!$accountId) {
-            return redirect()->route('login')->with('error', 'User not logged in.');
-        }
-    
-        $user = User::where('account_id', $accountId)->firstOrFail();
-    
-        // Get all window groups the user is related to
-        $windowGroups = $user->windowGroups()->with('queue')->get();
-    
-        // Get all queues related to those window groups
-        $queues = Queue::whereHas('windowGroups', function ($query) use ($windowGroups) {
-            $query->whereIn('id', $windowGroups->pluck('id'));
-        })->get();
-    
-        return view('MyQueues', compact('queues', 'windowGroups'));
+        $Window = Window::findOrFail($id);
+        $Window->users()->detach($user_id);
+
+        return redirect()->route('admin.window.view', ['id' => $id])->with('success', 'User removed successfully.');
     }
 
     //Closing and opening of queue and windows For user and not admin
     public function updateAccess(Request $request, $user_id, $queue_id)
     {
-        $accessList = WindowGroupAccess::where('user_id', $user_id)
+        $accessList = WindowAccess::where('user_id', $user_id)
                                         ->where('queue_id', $queue_id)
                                         ->get();
     
@@ -169,28 +149,52 @@ class QueueController extends Controller
         return response()->json(['success' => true, 'message' => 'Access privileges updated successfully.']);
     }
 
+
+
+    //User 
+    public function myQueuesAndWindows()
+    {
+        $accountId = Session::get('account_id');
+    
+        $user = User::where('account_id', $accountId)->firstOrFail();
+    
+        // Get all window groups the user is related to
+        $windows = $user->Windows()->with('queue')->get();
+    
+        // Get all queues related to those window groups
+        $queues = Queue::whereHas('Windows', function ($query) use ($windows) {
+            $query->whereIn('id', $windows->pluck('id'));
+        })->get();
+    
+        return view('user.MyQueues', compact('queues', 'windows'));
+    }
+
     public function manageQueue($id)
     {
-        $queue = Queue::with('windowGroups')->findOrFail($id);
-        return view('QueueDetails', compact('queue'));
+        $queue = Queue::with('windows')->findOrFail($id);
+        return view('user.queuedetails', compact('queue'));
     }
 
 
     public function toggleWindow(Request $request, $id)
     {
         $user = Auth::user();
-        $windowGroup = WindowGroup::findOrFail($id);
+        $Window = Window::findOrFail($id);
         $queueId = $request->input('queue_id');
-        $access = WindowGroupAccess::where('user_id', $user->id)
-                                    ->where('queue_id', $queueId)
-                                    ->first();
+        $accessExists = WindowAccess::where('user_id', $user->id)
+                                         ->where('queue_id', $queueId)
+                                         ->where(function ($query) {
+                                             $query->where('can_close_own_window', true)
+                                                   ->orWhere('can_close_any_window', true);
+                                         })
+                                         ->exists();
     
-        if (!$access || (!$access->can_close_own_window && !$access->can_close_any_window)) {
+        if (!$accessExists) {
             return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
         }
     
-        $windowGroup->status = $windowGroup->status === 'open' ? 'closed' : 'open';
-        $windowGroup->save();
+        $Window->status = $Window->status === 'open' ? 'closed' : 'open';
+        $Window->save();
     
         return response()->json(['success' => true, 'message' => 'Window status updated successfully.']);
     }
@@ -199,11 +203,12 @@ class QueueController extends Controller
     {
         $user = Auth::user();
         $queue = Queue::findOrFail($id);
-        $access = WindowGroupAccess::where('user_id', $user->id)
+        $accessExists = WindowAccess::where('user_id', $user->id)
                                     ->where('queue_id', $id)
-                                    ->first();
+                                    ->where('can_close_queue', true)
+                                    ->exists();
     
-        if (!$access || !$access->can_close_queue) {
+        if (!$accessExists) {
             return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
         }
     
@@ -217,21 +222,22 @@ class QueueController extends Controller
     {
         $user = Auth::user();
         $queue = Queue::findOrFail($id);
-        $access = WindowGroupAccess::where('user_id', $user->id)
+        $accessExists = WindowAccess::where('user_id', $user->id)
                                     ->where('queue_id', $id)
-                                    ->first();
+                                    ->where('can_clear_queue', true)
+                                    ->exists();
     
-        if (!$access || !$access->can_clear_queue) {
+        if (!$accessExists) {
             return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
         }
     
-        $waitingItems = $queue->queued()->where('status', 'Waiting')->get();
+        $waitingItems = $queue->Ticket()->where('status', 'Waiting')->get();
     
         if ($waitingItems->isEmpty()) {
             return response()->json(['success' => true, 'message' => 'No items with status "Waiting" found.']);
         }
     
-        $queue->queued()->where('status', 'Waiting')->update([
+        $queue->Ticket()->where('status', 'Waiting')->update([
             'status' => 'Completed'
         ]);
     

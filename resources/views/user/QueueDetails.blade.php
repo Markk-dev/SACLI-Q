@@ -46,7 +46,7 @@
                             <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Window Groups</h2>
                         </div>
 
-                        @if ($queue->windowGroups->isNotEmpty())
+                        @if ($queue->windows->isNotEmpty())
                             <div class="overflow-x-auto">
                                 <table class="min-w-full">
                                     <thead>
@@ -63,28 +63,28 @@
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                        @foreach ($queue->windowGroups as $windowGroup)
+                                        @foreach ($queue->windows as $window)
                                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                                                 <td class="px-6 py-4">
                                                     <div class="flex items-center">
                                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                                            {{ $windowGroup->name }}
+                                                            {{ $window->name }}
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td class="px-6 py-4">
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                        {{ $windowGroup->status == 'open' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
-                                                        {{ ucfirst($windowGroup->status) }}
+                                                        {{ $window->status == 'open' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                                        {{ ucfirst($window->status) }}
                                                     </span>
                                                 </td>
                                                 <td class="px-6 py-4">
                                                     <label class="relative inline-flex items-center cursor-pointer">
                                                         <input type="checkbox" 
                                                             class="sr-only peer toggle-window" 
-                                                            data-id="{{ $windowGroup->id }}" 
+                                                            data-id="{{ $window->id }}" 
                                                             data-queue-id="{{ $queue->id }}"
-                                                            {{ $windowGroup->status == 'open' ? 'checked' : '' }}>
+                                                            {{ $window->status == 'open' ? 'checked' : '' }}>
                                                         <div class="w-11 h-6 bg-gray-200 rounded-full peer 
                                                             dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-blue-300 
                                                             dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full 
@@ -94,7 +94,7 @@
                                                             peer-checked:bg-blue-600">
                                                         </div>
                                                         <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                                                            {{ $windowGroup->status == 'open' ? 'Open' : 'Closed' }}
+                                                            {{ $window->status == 'open' ? 'Open' : 'Closed' }}
                                                         </span>
                                                     </label>
                                                 </td>

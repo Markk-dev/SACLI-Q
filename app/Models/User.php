@@ -19,6 +19,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    public $timestamps = true;
     protected $fillable = [
         'name',
         'account_id',
@@ -48,14 +49,14 @@ class User extends Authenticatable
         ];
     }
 
-    public function queued()
+    public function Ticket()
     {
-        return $this->hasMany(Queued::class, 'handled_by');
+        return $this->hasMany(Ticket::class, 'handled_by');
     }
 
     
-    public function windowGroups()
+    public function Windows()
     {
-        return $this->belongsToMany(WindowGroup::class, 'window_group_access', 'user_id', 'window_group_id');
+        return $this->belongsToMany(Window::class, 'window_access', 'user_id', 'window_id');
     }
 }

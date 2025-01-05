@@ -12,7 +12,7 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-between items-center">
-                    <form method="GET" action="{{ route('users') }}" class="flex-auto sm:w-auto sm:mr-4">
+                    <form method="GET" action="{{ route('user.list') }}" class="flex-auto sm:w-auto sm:mr-4">
                         <div class="flex items-center w-100 sm:w-auto mt-4">
                             <input type="text" name="search" placeholder="Search users..." class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
                             <button type="submit" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Search</button>
@@ -37,7 +37,7 @@
                         <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                             <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                                 <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Create New User</h1>
-                                <form id="createUserForm" class="mt-4" action="{{ route('createAccount') }}" method="POST">
+                                <form id="createUserForm" class="mt-4" action="{{ route('user.save') }}" method="POST">
                                     @csrf
                                     <div class="mb-4">
                                         <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Employee Name</label>
@@ -113,7 +113,7 @@
                                             <span class="text-gray-500 cursor-not-allowed ml-4">Delete</span>
                                         @else
                                             <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                            <form action="{{ route('deleteAccount', ['id' => $user->id]) }}" method="POST" class="inline">
+                                            <form action="{{ route('user.delete', ['id' => $user->id]) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-red-600 hover:text-red-900 ml-4">Delete</button>

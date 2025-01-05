@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-class WindowGroup extends Model
+class Window extends Model
 {
-    protected $table = 'window_groups';
-
+    protected $table = 'windows';
+    public $timestamps = true;
     protected $fillable = [
         'name',
         'description',
@@ -21,6 +21,11 @@ class WindowGroup extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'window_group_access', 'window_group_id', 'user_id');
+        return $this->belongsToMany(User::class, 'window_access', 'window_id', 'user_id');
     }
+
+    public function tickets()
+{
+    return $this->hasMany(Ticket::class);
+}
 }

@@ -9,20 +9,20 @@
                 </p>
                 
                 <div>
-                    @if ($queue->windowGroups->isNotEmpty())
+                    @if ($queue->windows->isNotEmpty())
                         <form action="{{ route('ticketing.submit') }}" method="POST" class="space-y-8">
                             @csrf
                             <input type="hidden" name="queue_id" value="{{ $queue->id }}">
                             <fieldset>
                                 <legend class="block text-xl lg:text-2xl font-medium text-gray-800 mb-4 text-center">Choose where to queue:</legend>
                                 <div class="flex flex-wrap gap-6 justify-center">
-                                    @foreach ($queue->windowGroups as $windowGroup)
+                                    @foreach ($queue->windows as $window)
                                         <div class="flex items-center w-full md:w-1/4">
-                                            <input id="window_group_{{ $windowGroup->id }}" name="window_group" type="radio" value="{{ $windowGroup->id }}" class="hidden peer" data-description="{{ $windowGroup->description }}" {{ $windowGroup->status === 'closed' ? 'disabled' : '' }}>
-                                            <label for="window_group_{{ $windowGroup->id }}" 
-                                                   class="peer-checked:bg-indigo-100 peer-checked:border-indigo-600 peer-checked:shadow-md transition-all cursor-pointer flex items-center justify-center w-full h-40 px-8 py-6 {{ $windowGroup->status === 'closed' ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' : 'bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200' }} text-3xl font-bold rounded-lg">
-                                                {{ $windowGroup->name }}
-                                                @if ($windowGroup->status === 'closed')
+                                            <input id="windows_group_{{ $window->id }}" name="window" type="radio" value="{{ $window->id }}" class="hidden peer" data-description="{{ $window->description }}" {{ $window->status === 'closed' ? 'disabled' : '' }}>
+                                            <label for="windows_group_{{ $window->id }}" 
+                                                   class="peer-checked:bg-indigo-100 peer-checked:border-indigo-600 peer-checked:shadow-md transition-all cursor-pointer flex items-center justify-center w-full h-40 px-8 py-6 {{ $window->status === 'closed' ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' : 'bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200' }} text-3xl font-bold rounded-lg">
+                                                {{ $window->name }}
+                                                @if ($window->status === 'closed')
                                                     <span class="block text-sm text-red-500 mt-2">Not Available</span>
                                                 @endif
                                             </label>
@@ -79,7 +79,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const radioButtons = document.querySelectorAll('input[name="window_group"]');
+        const radioButtons = document.querySelectorAll('input[name="windows_group"]');
         const descriptionDiv = document.getElementById('description');
 
         // Update description on radio button change

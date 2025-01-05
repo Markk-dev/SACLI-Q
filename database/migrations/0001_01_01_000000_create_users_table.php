@@ -43,7 +43,7 @@ return new class extends Migration
             $table->timestamps();
         });
         
-        Schema::create('window_groups', function (Blueprint $table) {
+        Schema::create('windows', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('description');
@@ -52,21 +52,26 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('window_group_access', function (Blueprint $table) {
+        Schema::create('window_access', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('queue_id')->constrained('queues')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('window_group_id')->constrained('window_groups')->onDelete('cascade');            
+            $table->foreignId('window_id')->constrained('windows')->onDelete('cascade');            
             $table->string('window_name')->nullable(); 
+            $table->boolean('can_close_own_window')->default(false);
+            $table->boolean('can_close_any_window')->default(false);
+            $table->boolean('can_close_queue')->default(false);
+            $table->boolean('can_clear_queue')->default(false);
             $table->timestamps();
         });
 
-        Schema::create('queued', function (Blueprint $table) {
+        Schema::create('tickets', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique();
             $table->string('name')->nullable();
             $table->string('status')->default('Waiting');
             $table->foreignId('handled_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('window_group_id')->constrained('window_groups')->onDelete('cascade');
+            $table->foreignId('window_id')->constrained('windows')->onDelete('cascade');
             $table->foreignId('queue_id')->constrained('queues')->onDelete('cascade');
             $table->timestamp('called_at')->nullable();
             $table->timestamp('completed_at')->nullable();
@@ -80,6 +85,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('users');
+        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('queues');
+        Schema::dropIfExists('windows');
+        Schema::dropIfExists('window_access');
+        Schema::dropIfExists('Tickets');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }

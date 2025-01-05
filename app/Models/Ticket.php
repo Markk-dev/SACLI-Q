@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class queued extends Model
+class Ticket extends Model
 {
-    protected $table = 'queued';
+    protected $table = 'tickets';
     public $timestamps = true;
 
     protected $fillable = [
@@ -14,7 +14,7 @@ class queued extends Model
         'name',
         'status',
         'handled_by',
-        'window_group_id',	
+        'window_id',	
         'queue_id',
         'called_at',
         'completed_at',
@@ -27,8 +27,10 @@ class queued extends Model
     }
 
     
-    public function windowGroup()
+    public function window()
     {
-        return $this->belongsTo(WindowGroup::class);
+        return $this->belongsTo(Window::class);
     }
+
+    
 }

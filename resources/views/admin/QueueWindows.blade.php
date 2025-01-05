@@ -1,4 +1,4 @@
-<!-- filepath: /d:/XAMPP/htdocs/SACLIQueue/resources/views/ViewQueueWindowGroups.blade.php -->
+<!-- filepath: /d:/XAMPP/htdocs/SACLIQueue/resources/views/ViewQueuewindows.blade.php -->
 <x-Dashboard>
     <x-slot name="content">
         <div class="mt-8 p-12 sm:ml-64 dark:bg-gray-700 min-h-screen">
@@ -13,22 +13,22 @@
                 <!-- Window Groups Section -->
                 <div class="mb-12">
                     <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Window Groups</h2>
-                    @if ($queue->windowGroups && $queue->windowGroups->isNotEmpty())
+                    @if ($queue->windows && $queue->windows->isNotEmpty())
                         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            @foreach ($queue->windowGroups as $windowGroup)
+                            @foreach ($queue->windows as $window)
                                 <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-md hover:shadow-lg transition-transform duration-200 hover:scale-105">
-                                    <a href="{{ route('windowGroups.view', ['id' => $windowGroup->id]) }}" class="block p-6">
+                                    <a href="{{ route('admin.window.view', ['id' => $window->id]) }}" class="block p-6">
                                         <div class="flex items-center space-x-4">
                                             <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
                                                 <i class="fas fa-window-restore text-blue-600 dark:text-blue-400"></i>
                                             </div>
                                             <div>
-                                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ $windowGroup->name }}</h3>
-                                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ $windowGroup->description }}</p>
+                                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ $window->name }}</h3>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ $window->description }}</p>
                                             </div>
                                         </div>
                                     </a>
-                                    <form action="{{ route('windowGroups.remove', ['id' => $windowGroup->id]) }}" method="POST" class="border-t border-gray-200 dark:border-gray-600">
+                                    <form action="{{ route('admin.window.delete', ['id' => $window->id]) }}" method="POST" class="border-t border-gray-200 dark:border-gray-600">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="w-full py-3 text-sm font-semibold text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition">
@@ -46,7 +46,7 @@
                 <!-- Add Window Group Form -->
                 <div class="mb-12">
                     <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Add New Window Group</h2>
-                    <form action="{{ route('windowGroups.add', ['queue_id' => $queue->id]) }}" method="POST" class="space-y-6">
+                    <form action="{{ route('admin.window.create', ['queue_id' => $queue->id]) }}" method="POST" class="space-y-6">
                         @csrf
                         <div>
                             <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
@@ -91,21 +91,21 @@
                                                     {{ $user->name }}
                                                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                         @foreach ($userWindows->get($user->id, collect()) as $windowAccess)
-                                                            <div>{{ $windowAccess->windowGroup->name }}</div>
+                                                            <div>{{ $windowAccess->window->name }}</div>
                                                         @endforeach
                                                     </div>
                                                 </td>
                                                 <td class="px-6 py-4 text-center">
-                                                    <input type="checkbox" {{ $access->can_close_own_window ? 'checked' : '' }} class="form-checkbox" data-id="{{ $access->id }}" data-field="can_close_own_window">
+                                                    <input type="checkbox" {{ $access->can_close_own_window ? 'checked' : '' }} class="form-checkbox" data-id="{{ $user->id }}" data-field="can_close_own_window">
                                                 </td>
                                                 <td class="px-6 py-4 text-center">
-                                                    <input type="checkbox" {{ $access->can_close_any_window ? 'checked' : '' }} class="form-checkbox" data-id="{{ $access->id }}" data-field="can_close_any_window">
+                                                    <input type="checkbox" {{ $access->can_close_any_window ? 'checked' : '' }} class="form-checkbox" data-id="{{ $user->id }}" data-field="can_close_any_window">
                                                 </td>
                                                 <td class="px-6 py-4 text-center">
-                                                    <input type="checkbox" {{ $access->can_close_queue ? 'checked' : '' }} class="form-checkbox" data-id="{{ $access->id }}" data-field="can_close_queue">
+                                                    <input type="checkbox" {{ $access->can_close_queue ? 'checked' : '' }} class="form-checkbox" data-id="{{ $user->id }}" data-field="can_close_queue">
                                                 </td>
                                                 <td class="px-6 py-4 text-center">
-                                                    <input type="checkbox" {{ $access->can_clear_queue ? 'checked' : '' }} class="form-checkbox" data-id="{{ $access->id }}" data-field="can_clear_queue">
+                                                    <input type="checkbox" {{ $access->can_clear_queue ? 'checked' : '' }} class="form-checkbox" data-id="{{ $user->id }}" data-field="can_clear_queue">
                                                 </td>
                                                 <td class="px-6 py-4 text-center">
                                                     <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition update-access" data-user-id="{{ $user->id }}" data-queue-id="{{ $queue->id }}">Update</button>
@@ -135,6 +135,7 @@
                 const canCloseAnyWindow = document.querySelector(`input[data-id="${userId}"][data-field="can_close_any_window"]`).checked;
                 const canCloseQueue = document.querySelector(`input[data-id="${userId}"][data-field="can_close_queue"]`).checked;
                 const canClearQueue = document.querySelector(`input[data-id="${userId}"][data-field="can_clear_queue"]`).checked;
+
 
                 fetch(`/update-access/${userId}/${queueId}`, {
                     method: 'POST',

@@ -194,9 +194,8 @@
 <script>
 $(document).ready(function() {
     var token = "{{ session('token') }}";
-    var window_id = "{{ $window->id }}";
 
-    function getCurrentTicketForWindow(window_id) {
+    function getCurrentTicketForWindow() {
         
         $.ajax({
             url: "{{ route('getCurrentTicketForWindow', ['window_id' => $window->id]) }}",
@@ -243,7 +242,7 @@ $(document).ready(function() {
         });
     }
 
-    function getTables() {
+    function getTablesAndData() {
         $.ajax({
             url: "{{ route('getUpcomingTicketsCount', ['window_id' => $window->id]) }}",
             method: 'GET',
@@ -337,9 +336,7 @@ $(document).ready(function() {
         });
     });
 
-
-    //Controls
-
+    //Control Buttons
     $('#next-ticket').on('click', function(event) {
         event.preventDefault();
         $.ajax({
@@ -347,9 +344,10 @@ $(document).ready(function() {
             method: 'GET',
             success: function(response) {
                 console.log(response);
+
                 if(response.success) {
-                    getCurrentTicketForWindow(window_id);
-                    getTables(window_id);
+                    getCurrentTicketForWindow();
+                    getTablesAndData();
                     alert(response['message']);
                 } else {
                     alert(response['message']);
@@ -370,8 +368,8 @@ $(document).ready(function() {
             success: function(response) {
                 console.log(response);
                 if(response.success) {
-                    getCurrentTicketForWindow(window_id);
-                    getTables(window_id);
+                    getCurrentTicketForWindow();
+                    getTablesAndData();
                     alert(response['message']);
                 } else {
                     alert(response['message']);
@@ -392,8 +390,8 @@ $(document).ready(function() {
             success: function(response) {
                 console.log(response);
                 if(response.success) {
-                    getCurrentTicketForWindow(window_id);
-                    getTables(window_id);
+                    getCurrentTicketForWindow();
+                    getTablesAndData();
                     alert(response['message']);
                 } else {
                     alert(response['message']);
@@ -414,8 +412,8 @@ $(document).ready(function() {
             success: function(response) {
                 console.log(response);
                 if(response.success) {
-                    getCurrentTicketForWindow(window_id);
-                    getTables(window_id);
+                    getCurrentTicketForWindow();
+                    getTablesAndData();
                     alert(response['message']);
                 } else {
                     alert(response['message']);
@@ -429,12 +427,18 @@ $(document).ready(function() {
     });
 
 
-    getTables();
-    getCurrentTicketForWindow(window_id);
+    getTablesAndData();
+    getCurrentTicketForWindow();
 
-    setInterval(() => {
-        getCurrentTicketForWindow(window_id);
-        getTables(window_id);
-    }, 15000);
+    Echo.channel('live-queue')
+      .listen('NewTicketEvent', () => {
+          console.log("A Ticket event has been detected");
+          
+          // Add a timeout before calling getLiveData
+          setTimeout(() => {
+            getTablesAndData();
+          }, 2000);
+      });
+
 });
 </script>

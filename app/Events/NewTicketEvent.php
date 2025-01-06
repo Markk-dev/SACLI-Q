@@ -11,22 +11,30 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class UserQueued implements ShouldBroadcastNow
+class NewTicketEvent implements ShouldBroadcastNow
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
     /**
      * Create a new event instance.
-     */    
-
+     */
     public function __construct()
     {
-
+        //
     }
 
+    /**
+     * Get the channels the event should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel>
+     */
+    //Broadcast an event on a channel
     public function broadcastOn()
     {
-        return new Channel('queue');
+        return new Channel('live-queue');
     }
 
+    public function broadcastWith()
+    {
+        return [
+        ];
+    }
 }

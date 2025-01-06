@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\UserQueued;
+use App\Events\DashboardEvent;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\QueueController;
@@ -9,9 +10,7 @@ use App\Http\Middleware\ValidateUser;
 use App\Http\Middleware\IsAdmin;
 
 // Broadcast route
-Route::get('/broadcast', function () {
-    broadcast(new UserQueued());
-});
+Route::get('/broadcast', [QueuingDashboardController::class, 'broadcastEvent'])->name('broadcast.event');
 
 // Main routes
 Route::get('/', [MainController::class, 'index'])->name('index');//Working
@@ -68,6 +67,9 @@ Route::get('api/ticket/set-to-hold/{window_id}', [QueuingDashboardController::cl
 Route::get('api/ticket/all-on-hold/{window_id}', [QueuingDashboardController::class, 'getAllTicketsOnHold'])->name('allTicketsOnHold'); // Get all on-hold tickets
 Route::get('api/ticket/upcoming/{window_id}', [QueuingDashboardController::class, 'getUpcomingTicketsCount'])->name('getUpcomingTicketsCount'); // Get all tickets for a window group
 Route::get('api/ticket/completed/{window_id}', [QueuingDashboardController::class, 'getAllCompletedTickets'])->name('allTicketsCompleted'); // Get all completed tickets for a window group
+Route::get('api/queue/{id}', [QueuingDashboardController::class, 'getLiveData'])->name('getLiveData'); // Get all completed tickets for a window group
+
+
 
 // Fallback route
 Route::fallback(function () {

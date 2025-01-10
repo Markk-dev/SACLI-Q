@@ -34,7 +34,7 @@
         
             <div class="w-1/3">
               <x-Carousel></x-Carousel>
-              </div>
+            </div>
               
         </div>          
     </x-slot>
@@ -102,17 +102,18 @@
 
       getLiveData();
 
-      Echo.channel('live-queue')
+      Echo.channel('live-queue.{{$queue->id}}')
       .listen('DashboardEvent', () => {
           console.log("A Window event has been detected");
           
+          console.log("The event has been received");
           // Add a timeout before calling getLiveData
           setTimeout(() => {
               getLiveData();
           }, 2000); // 2000ms = 2 seconds
       });
 
-      Echo.channel('live-queue')
+      Echo.channel('live-queue.{{$queue->id}}')
       .listen('NewTicketEvent', () => {
           console.log("A Ticket event has been detected");
           

@@ -11,7 +11,8 @@ class Queue extends Model
     public $timestamps = true;
     protected $fillable = [
         'name',
-        'status'
+        'status',
+        'code',
     ];
 
     public function windows(): HasMany
@@ -20,6 +21,11 @@ class Queue extends Model
     }
 
     public function queued()
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
+    public function tickets()
     {
         return $this->hasMany(Ticket::class);
     }

@@ -39,6 +39,7 @@ return new class extends Migration
         Schema::create('queues', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('code')->unique();
             $table->string('status')->default('open');
             $table->timestamps();
         });
@@ -84,13 +85,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('sessions');
-        Schema::dropIfExists('queues');
-        Schema::dropIfExists('windows');
+        Schema::dropIfExists('tickets');
         Schema::dropIfExists('window_access');
-        Schema::dropIfExists('Tickets');
-        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('windows');
+        Schema::dropIfExists('queues');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('password_reset_tokens');
     }
 };

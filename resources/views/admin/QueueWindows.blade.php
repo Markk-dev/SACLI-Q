@@ -124,7 +124,6 @@
         </div>
     </x-slot>
 </x-Dashboard>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.update-access').forEach(button => {
@@ -136,8 +135,7 @@
                 const canCloseQueue = document.querySelector(`input[data-id="${userId}"][data-field="can_close_queue"]`).checked;
                 const canClearQueue = document.querySelector(`input[data-id="${userId}"][data-field="can_clear_queue"]`).checked;
 
-
-                fetch(`/update-access/${userId}/${queueId}`, {
+                fetch("{{ route('update-access', ['user_id' => '__userId__', 'queue_id' => '__queueId__']) }}".replace('__userId__', userId).replace('__queueId__', queueId), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

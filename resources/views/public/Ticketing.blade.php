@@ -18,7 +18,7 @@
                                 <div class="flex flex-wrap gap-6 justify-center">
                                     @foreach ($queue->windows as $window)
                                         <div class="flex items-center w-full md:w-1/4">
-                                            <input id="windows_group_{{ $window->id }}" name="window" type="radio" value="{{ $window->id }}" class="hidden peer" data-description="{{ $window->description }}" {{ $window->status === 'closed' ? 'disabled' : '' }}>
+                                            <input id="windows_group_{{ $window->id }}" name="window_id" type="radio" value="{{ $window->id }}" class="hidden peer" data-description="{{ $window->description }}" {{ $window->status === 'closed' ? 'disabled' : '' }}>
                                             <label for="windows_group_{{ $window->id }}" 
                                                    class="peer-checked:bg-indigo-100 peer-checked:border-indigo-600 peer-checked:shadow-md transition-all cursor-pointer flex items-center justify-center w-full h-40 px-8 py-6 {{ $window->status === 'closed' ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' : 'bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200' }} text-3xl font-bold rounded-lg">
                                                 {{ $window->name }}

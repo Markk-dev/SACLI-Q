@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Broadcast;
 
-Broadcast::channel('live-queue', function () {
-
+Broadcast::channel('live-queue.{queue_id}', function () {
 
 });

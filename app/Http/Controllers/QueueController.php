@@ -29,7 +29,7 @@ class QueueController extends Controller
         return view('admin.queues', compact('queues', 'Windows'));
     }
 
-    //Create/ Delete a queue a new queue and redirect to route('admin.queue.list')
+    //Create and Delete a queue a new queue and redirect to route('admin.queue.list')
     public function createQueue(Request $request)
     {
         $request->validate([
@@ -39,11 +39,17 @@ class QueueController extends Controller
             'window_groups.*.description' => 'string',
         ]);
     
+        // Generate a unique 6-character code
+        $uniqueCode = $this->generateUniqueCode();
+    
+        // Create and save the queue
         $queue = new Queue();
         $queue->name = $request->name;
+        $queue->code = $uniqueCode; // Assign the generated unique code
         $queue->save();
     
-        if($request->window_groups != null){
+        // Save associated window groups if provided
+        if ($request->window_groups != null) {
             foreach ($request->window_groups as $WindowData) {
                 $Window = new Window($WindowData);
                 $queue->Windows()->save($Window);
@@ -52,6 +58,7 @@ class QueueController extends Controller
     
         return redirect()->route('admin.queue.list')->with('success', 'Queue created successfully.');
     }
+    
     public function deleteQueue($id)
     {
         $queue = Queue::findOrFail($id);
@@ -151,7 +158,9 @@ class QueueController extends Controller
 
 
 
-    //User 
+    /**
+     * User Methods
+     **/ 
     public function myQueuesAndWindows()
     {
         $accountId = Session::get('account_id');
@@ -175,34 +184,63 @@ class QueueController extends Controller
         return view('user.queuedetails', compact('queue'));
     }
 
+    //Showing the dashboard for queuing
+    public function queueingDashboard(Request $request, $id){
+        $user_id = Auth::user()->id;
+        // Fetch the Window and its associated Queue using the provided ID
+        $window = Window::with('queue')->findOrFail($id);
 
+        //This is 
+        $windowAccess = WindowAccess::where('user_id', $user_id)
+        ->where('window_id', $window->id)->first();
+
+        if($window == null || $windowAccess==null){
+            return redirect()->route('myQueues')->with('error', 'You do not have access to this window.');
+        }else{
+            // Pass the fetched data to the view
+            return view('user.QueuingDashboard', compact('windowAccess', 'window'));
+        }
+    }
+
+    //Other Controls
     public function toggleWindow(Request $request, $id)
     {
         $user = Auth::user();
-        $Window = Window::findOrFail($id);
+        $window = Window::findOrFail($id);
         $queueId = $request->input('queue_id');
+        $queue = Queue::findOrFail($queueId);
+    
+        // Check if the user has privileges to toggle the window
         $accessExists = WindowAccess::where('user_id', $user->id)
-                                         ->where('queue_id', $queueId)
-                                         ->where(function ($query) {
-                                             $query->where('can_close_own_window', true)
-                                                   ->orWhere('can_close_any_window', true);
-                                         })
-                                         ->exists();
+                                     ->where('queue_id', $queueId)
+                                     ->where(function ($query) {
+                                         $query->where('can_close_own_window', true)
+                                               ->orWhere('can_close_any_window', true);
+                                     })
+                                     ->exists();
     
         if (!$accessExists) {
             return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
         }
     
-        $Window->status = $Window->status === 'open' ? 'closed' : 'open';
-        $Window->save();
+        // Prevent opening the window if the queue is closed
+        if ($queue->status === 'closed' && $window->status === 'open') {
+            return response()->json(['success' => false, 'message' => 'The queue is closed. You cannot open the window.'], 403);
+        }
+    
+        // Toggle the window status
+        $window->status = $window->status === 'open' ? 'closed' : 'open';
+        $window->save();
     
         return response()->json(['success' => true, 'message' => 'Window status updated successfully.']);
     }
-
+    
     public function toggleQueue($id)
     {
         $user = Auth::user();
         $queue = Queue::findOrFail($id);
+    
+        // Check if the user has privileges to toggle the queue status
         $accessExists = WindowAccess::where('user_id', $user->id)
                                     ->where('queue_id', $id)
                                     ->where('can_close_queue', true)
@@ -212,14 +250,21 @@ class QueueController extends Controller
             return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
         }
     
-        $queue->status = $queue->status === 'open' ? 'closed' : 'open';
+        // Toggle the queue status
+        $newStatus = $queue->status === 'open' ? 'closed' : 'open';
+        $queue->status = $newStatus;
         $queue->save();
     
-        return response()->json(['success' => true, 'message' => 'Queue status updated successfully.']);
+        // Update the status of all windows associated with the queue
+        $queue->windows()->update(['status' => $newStatus]);
+    
+        return response()->json(['success' => true, 'message' => 'Queue and windows status updated successfully.']);
     }
+    
     
     public function clearQueue($id)
     {
+        
         $user = Auth::user();
         $queue = Queue::findOrFail($id);
         $accessExists = WindowAccess::where('user_id', $user->id)
@@ -227,20 +272,35 @@ class QueueController extends Controller
                                     ->where('can_clear_queue', true)
                                     ->exists();
     
+                                    
         if (!$accessExists) {
             return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
         }
     
-        $waitingItems = $queue->Ticket()->where('status', 'Waiting')->get();
+        $waitingItems = $queue->tickets()->get();
     
-        if ($waitingItems->isEmpty()) {
-            return response()->json(['success' => true, 'message' => 'No items with status "Waiting" found.']);
+        if (!$queue->tickets()->exists()) {
+            return response()->json(['success' => true, 'message' => 'No tickets found.']);
         }
-    
-        $queue->Ticket()->where('status', 'Waiting')->update([
+        
+        $queue->tickets()->update([
             'status' => 'Completed'
         ]);
     
         return response()->json(['success' => true, 'message' => 'Queue cleared successfully.']);
+    }
+
+
+    /**
+     * Generate a unique 6-character code for the queue.
+     */
+    private function generateUniqueCode()
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        do {
+            $code = substr(str_shuffle($characters), 0, 6);
+        } while (Queue::where('code', $code)->exists()); 
+    
+        return $code;
     }
 }

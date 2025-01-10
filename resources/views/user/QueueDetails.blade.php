@@ -121,22 +121,28 @@
 </x-Dashboard>
 
 <script>
+    const routes = {
+        toggleWindow: "{{ route('window.toggle', ['id' => ':id']) }}",
+        toggleQueue: "{{ route('queue.toggle', ['id' => ':id']) }}",
+        clearQueue: "{{ route('queue.clear', ['id' => ':id']) }}",
+    };
+    
     document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.toggle-window').forEach(toggle => {
-            toggle.addEventListener('change', function () {
-                const id = this.getAttribute('data-id');
-                const queueId = this.getAttribute('data-queue-id');
+    document.querySelectorAll('.toggle-window').forEach(toggle => {
+        toggle.addEventListener('change', function () {
+            const id = this.getAttribute('data-id');
+            const queueId = this.getAttribute('data-queue-id');
 
-                fetch(`/window-groups/${id}/toggle`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        queue_id: queueId
-                    })
+            fetch(routes.toggleWindow.replace(':id', id), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    queue_id: queueId
                 })
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -150,19 +156,19 @@
                     console.error('Error:', error);
                     alert('An error occurred while updating the window status.');
                 });
-            });
         });
+    });
 
-        document.querySelector('.close-queue').addEventListener('click', function () {
-            const id = this.getAttribute('data-id');
+    document.querySelector('.close-queue').addEventListener('click', function () {
+        const id = this.getAttribute('data-id');
 
-            fetch(`/queues/${id}/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
+        fetch(routes.toggleQueue.replace(':id', id), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -176,18 +182,18 @@
                 console.error('Error:', error);
                 alert('An error occurred while updating the queue status.');
             });
-        });
+    });
 
-        document.querySelector('.clear-queue').addEventListener('click', function () {
-            const id = this.getAttribute('data-id');
+    document.querySelector('.clear-queue').addEventListener('click', function () {
+        const id = this.getAttribute('data-id');
 
-            fetch(`/queues/${id}/clear`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
+        fetch(routes.clearQueue.replace(':id', id), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -198,10 +204,10 @@
                 }
             })
             .catch(error => {
-                
                 console.error('Error:', error);
                 alert('An error occurred while clearing the queue.');
             });
-        });
     });
+});
+
 </script>

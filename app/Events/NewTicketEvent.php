@@ -16,9 +16,16 @@ class NewTicketEvent implements ShouldBroadcastNow
     /**
      * Create a new event instance.
      */
-    public function __construct()
+    public $queueCode; // Dynamic queue name
+
+    /**
+     * Create a new event instance.
+     *
+     * @param string $queueCode
+     */
+    public function __construct($queueCode)
     {
-        //
+        $this->queueCode = $queueCode;
     }
 
     /**
@@ -29,7 +36,7 @@ class NewTicketEvent implements ShouldBroadcastNow
     //Broadcast an event on a channel
     public function broadcastOn()
     {
-        return new Channel('live-queue');
+        return [new Channel('live-queue.'.$this->queueCode)];
     }
 
     public function broadcastWith()

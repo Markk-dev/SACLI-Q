@@ -437,7 +437,7 @@ $(document).ready(function() {
           // Add a timeout before calling getLiveData
           setTimeout(() => {
             getTablesAndData();
-          }, 2000);
+          }, 3000);
       });
 
 });

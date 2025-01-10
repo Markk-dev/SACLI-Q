@@ -15,6 +15,7 @@ class MainController extends Controller
         }
        return view('Login');
     }
+
     function login(Request $request){
         $request->validate([
             'account_id' => 'required',
@@ -27,12 +28,12 @@ class MainController extends Controller
             $user = Auth::user();
     
             // Create a Sanctum token
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // $token = $user->createToken('auth_token')->plainTextToken;
 
             session(['account_id' => $user->account_id, 'access_type'=>$user->access_type,
-             'name'=>$user->name, 'user_id'=>$user->id, 'token'=>$token]);
+             'name'=>$user->name, 'user_id'=>$user->id]);
             
-            return redirect()->intended('dashboard'); 
+            return redirect()->intended(route('dashboard')); 
         }
             
         return redirect()->back()->withErrors([
@@ -53,8 +54,7 @@ class MainController extends Controller
     //Homepage dashboard
     function dashboard(){
         return view('user.dashboard');
-     }
-
+    }
 
      //User Management
      function users(Request $request){

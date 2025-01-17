@@ -53,7 +53,7 @@ Route::get('/Sacli-Q.com/queuing-dashboard/{id}', [QueueController::class, 'queu
 
 // Ticketing routes
 Route::get('/Sacli-Q.com/live/{code}', [PublicController::class, 'liveQueue'])->name('liveQueue');
-Route::get('/Sacli-Q.com/ticketing/{id}', [PublicController::class, 'ticketing'])->name('ticketing');
+Route::get('/Sacli-Q.com/ticketing/{code}', [PublicController::class, 'ticketing'])->name('ticketing');
 Route::post('/Sacli-Q.com/ticketing/submit', [PublicController::class, 'ticketingSubmit'])->name('ticketing.submit');
 Route::get('/Sacli-Q.com/ticketing/success/{id}', [PublicController::class, 'ticketingSuccess'])->name('ticketing.success');
 

@@ -87,7 +87,6 @@ class APIController extends Controller
        $onCall = Ticket::where('window_id', $WindowId)
            ->where('handled_by', $user_id)
            ->where('status', 'Calling')
-           ->whereDate('created_at', Carbon::today())
            ->first();
 
        if ($onCall) {
@@ -121,7 +120,7 @@ class APIController extends Controller
                 'message' => 'Please finish the current ticket first.'], 200);
         }
 
-        //Gets the next ticket for the given window group
+        //Gets the next ticket for the given window 
         $Ticket = Ticket::where('window_id', $WindowId)
                         ->where('status', 'Waiting')
                         ->orderBy('created_at', 'asc')

@@ -28,8 +28,8 @@ class PublicController extends Controller
     }
     
 
-    function ticketing($id){
-        $queue = Queue::with('Windows')->findOrFail($id);
+    function ticketing($code){
+        $queue = Queue::where('code', $code)->first();
 
         return view('public.Ticketing',compact('queue'));
     }
@@ -80,7 +80,7 @@ class PublicController extends Controller
     public function ticketingSuccess($id)
     {
         $Ticket = Ticket::with('window')->findOrFail($id);
-    
+        $Queue = Queue::findOrFail($Ticket->queue_id);
         return view('public.TicketReceipt', compact('Ticket'));
     }
 

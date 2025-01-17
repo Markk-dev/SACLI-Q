@@ -178,6 +178,7 @@ class QueueController extends Controller
         return view('user.MyQueues', compact('queues', 'windows'));
     }
 
+    // Anotehr view
     public function manageQueue($id)
     {
         $queue = Queue::with('windows')->findOrFail($id);

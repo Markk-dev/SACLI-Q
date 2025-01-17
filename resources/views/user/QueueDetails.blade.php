@@ -16,8 +16,10 @@
                                     <div class="w-2 h-2 rounded-full mr-2 
                                         {{ $queue->status === 'open' ? 'bg-green-500' : 'bg-red-500' }}"></div>
                                     {{ ucfirst($queue->status) }}
-                                </div>
+                                </div>                              
                             </div>
+
+                            
                             <!-- Quick Actions -->
                             <div class="flex space-x-3">
                                 <button class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 
@@ -40,11 +42,60 @@
                         </div>
                     </div>
 
-                    <!-- Window Groups Section -->
-                    <div class="px-6 py-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Window Groups</h2>
+                    <div class="relative flex items-center gap-2 w-full justify-center p-4  border-b border-gray-600">
+                        <h1 class="text-gray-100">URL for live view: </h1>
+                        <span class="text-sm font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600">
+                            {{ route('liveQueue', ['code' => $queue->code]) }}
+                        </span>
+                        <button 
+                            data-copy="{{ route('liveQueue', ['code' => $queue->code]) }}"
+                            class="copyButton flex items-center px-2 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md border border-gray-300 dark:border-gray-600 transition-colors"
+                            aria-label="Copy to clipboard"
+                            {{-- onclick="copyURL()" --}}
+                        >
+                            <!-- Copy Icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M8 2a2 2 0 00-2 2v1H5a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2v-1h1a2 2 0 002-2V7a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H8zM7 4a1 1 0 011-1h4a1 1 0 011 1v1H7V4zm8 3v2H5V7h10zM5 12v3h6v-3H5z" />
+                            </svg>
+                        </button>
+                        <div 
+                            class="statusMessage absolute top-10 left-0 text-xs text-green-600 bg-green-50 px-3 py-1 rounded-lg border border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700 opacity-0 transition-opacity duration-200"
+                        >
+                            Copied!
                         </div>
+                    </div>
+                    
+
+                    <div class="relative flex items-center gap-2 w-full justify-center p-4  border-b border-gray-600">
+                        <h1 class="text-gray-100">URL for ticketing view: </h1>
+                        <span class="text-sm font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600">
+                            {{ route('ticketing', ['code' => $queue->code]) }}
+                        </span>
+                        <button 
+                            data-copy="{{ route('ticketing', ['code' => $queue->code]) }}"
+                            class="copyButton flex items-center px-2 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md border border-gray-300 dark:border-gray-600 transition-colors"
+                            aria-label="Copy to clipboard"
+                            {{-- onclick="copyURL()" --}}
+                        >   
+                            <!-- Copy Icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M8 2a2 2 0 00-2 2v1H5a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2v-1h1a2 2 0 002-2V7a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H8zM7 4a1 1 0 011-1h4a1 1 0 011 1v1H7V4zm8 3v2H5V7h10zM5 12v3h6v-3H5z" />
+                            </svg>
+                        </button>
+                        <div 
+                            class="statusMessage absolute top-10 left-0 text-xs text-green-600 bg-green-50 px-3 py-1 rounded-lg border border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700 opacity-0 transition-opacity duration-200"
+                        >
+                            Copied!
+                        </div>
+                    </div>
+                    
+                    <!-- Window  Section -->
+                    <div class="px-6 py-6">
+
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Windows</h2>
+                        </div>
+
 
                         @if ($queue->windows->isNotEmpty())
                             <div class="overflow-x-auto">
@@ -52,7 +103,7 @@
                                     <thead>
                                         <tr class="border-b border-gray-200 dark:border-gray-700">
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Window Group
+                                                Window
                                             </th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                 Status
@@ -109,8 +160,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                         d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                                 </svg>
-                                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No Window Groups</h3>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">No window groups have been created for this queue yet.</p>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No Window</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">No window have been created for this queue yet.</p>
                             </div>
                         @endif
                     </div>
@@ -127,87 +178,111 @@
         clearQueue: "{{ route('queue.clear', ['id' => ':id']) }}",
     };
     
-    document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.toggle-window').forEach(toggle => {
-        toggle.addEventListener('change', function () {
-            const id = this.getAttribute('data-id');
-            const queueId = this.getAttribute('data-queue-id');
 
-            fetch(routes.toggleWindow.replace(':id', id), {
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.toggle-window').forEach(toggle => {
+            toggle.addEventListener('change', function () {
+                const id = this.getAttribute('data-id');
+                const queueId = this.getAttribute('data-queue-id');
+
+                fetch(routes.toggleWindow.replace(':id', id), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        queue_id: queueId
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Window status updated successfully.');
+                            location.reload();
+                        } else {
+                            alert('Failed to update window status.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while updating the window status.');
+                    });
+            });
+        });
+
+        document.querySelector('.close-queue').addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+
+            fetch(routes.toggleQueue.replace(':id', id), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    queue_id: queueId
-                })
+                }
             })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Window status updated successfully.');
+                        alert('Queue status updated successfully.');
                         location.reload();
                     } else {
-                        alert('Failed to update window status.');
+                        alert('Failed to update queue status.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while updating the window status.');
+                    alert('An error occurred while updating the queue status.');
                 });
         });
-    });
 
-    document.querySelector('.close-queue').addEventListener('click', function () {
-        const id = this.getAttribute('data-id');
+        document.querySelector('.clear-queue').addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
 
-        fetch(routes.toggleQueue.replace(':id', id), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Queue status updated successfully.');
-                    location.reload();
-                } else {
-                    alert('Failed to update queue status.');
+            fetch(routes.clearQueue.replace(':id', id), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while updating the queue status.');
-            });
-    });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Queue cleared successfully.');
+                        location.reload();
+                    } else {
+                        alert('Failed to clear queue.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while clearing the queue.');
+                });
+        });
 
-    document.querySelector('.clear-queue').addEventListener('click', function () {
-        const id = this.getAttribute('data-id');
+        $('.copyButton').on('click', function () {
+            const textToCopy = $(this).data('copy');
+            const $statusMessage = $(this).nextAll('.statusMessage').first();
 
-        fetch(routes.clearQueue.replace(':id', id), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            if ($statusMessage.length) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    $statusMessage.removeClass('opacity-0').css('display', 'block');
+
+                    setTimeout(() => {
+                        $statusMessage.fadeOut(1000, function () {
+                            $(this).addClass('opacity-0').css('display', 'none');
+                        });
+                    }, 4000);
+
+                }).catch(err => {
+                    $statusMessage.text('Failed to copy text.').css('color', 'red');
+                    console.error('Copy failed:', err);
+                });
+            } else {
+                console.error('No sibling element with the class "statusMessage" found.');
             }
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Queue cleared successfully.');
-                    location.reload();
-                } else {
-                    alert('Failed to clear queue.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while clearing the queue.');
-            });
+        });
     });
-});
 
 </script>

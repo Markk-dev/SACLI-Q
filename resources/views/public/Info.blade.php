@@ -14,7 +14,7 @@
                     <form id="ticketTrackForm" action="{{ route('info') }}" method="GET" class="space-y-6">
                         <!-- Ticket Input -->
                         <div class="space-y-2">
-                            <label for="ticketCode" class="block text-sm font-medium text-gray-700">Ticket Number</label>
+                            <label for="ticketCode" class="block text-sm font-medium text-gray-700">Ticket Code</label>
                             <div class="relative">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
@@ -46,30 +46,26 @@
 
             @if(isset($ticket))
                 <div class="mt-4 alert alert-success">
-                    <h4>Ticket Found</h4>
+                    <h4 class="text-center">Ticket Found</h4>
                     <p><strong>Ticket Code:</strong> {{ $ticket->code }}</p>
                     <p><strong>Status:</strong> 
-                        @if($ticket->status === 'Calling')
-                            Your ticket has been called.
-                        @elseif($ticket->status === 'Waiting')
-                            Your ticket is waiting.
-                        @elseif($ticket->status === 'On Hold')
-                            Your ticket was called and is currently on hold.
-                        @elseif($ticket->status === 'Completed')
-                            Your ticket process has been Completed.
-                        @else
-                            {{ $ticket->status }}
-                        @endif
+                        {{ $ticket->status }}
                     </p>
-                    <p><strong>Queue:</strong> {{ $ticket->queue->name ?? 'Not assigned' }}</p>
+                    <br>
+                    <p><strong>Ticket Number:</strong> {{ $ticket->ticket_number ?? 'Not assigned' }}</p>
 
                     @if($ticket->status === 'Waiting' && isset($ticketPosition))
                         <p><strong>Your position in</strong> {{ $ticketPosition }}</p>
-                    @elseif($ticket->status !== 'Waiting')
-                        <p>The ticket is not in the waiting status, so position data is not available.</p>
-                    @else
-                        <p>No position data available for today.</p>
+                    @elseif($ticket->status === 'On Hold')
+                        <p>Ticket has already been called</p>
+                    @elseif($ticket->status === 'Completed')
+                        <p>Ticket has been marked Completed</p>
                     @endif
+
+                    <br>
+                    <p><strong>Queue:</strong> {{ $ticket->queue->name ?? 'Not assigned' }}</p>
+                    <p><strong>Window:</strong> {{ $ticket->window->name ?? 'Not assigned' }}</p>
+                    <br>
                 </div>
             @else
                 <div class="mt-4 alert alert-danger">

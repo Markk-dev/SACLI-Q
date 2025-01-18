@@ -11,6 +11,7 @@ class Ticket extends Model
 
     protected $fillable = [
         'code', 
+        'ticket_number', 
         'name',
         'status',
         'handled_by',
@@ -33,4 +34,8 @@ class Ticket extends Model
     }
 
     
+    public function queue()
+    {
+        return $this->belongsTo(Queue::class);
+    }
 }

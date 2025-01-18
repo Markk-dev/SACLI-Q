@@ -48,6 +48,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description');
+            $table->integer('limit')->default(100);
             $table->string('status')->default('open');
             $table->foreignId('queue_id')->constrained('queues')->onDelete('cascade');
             $table->timestamps();
@@ -71,6 +72,7 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('name')->nullable();
             $table->string('status')->default('Waiting');
+            $table->integer('ticket_number');
             $table->foreignId('handled_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('window_id')->constrained('windows')->onDelete('cascade');
             $table->foreignId('queue_id')->constrained('queues')->onDelete('cascade');

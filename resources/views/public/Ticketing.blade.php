@@ -90,5 +90,14 @@
                 descriptionDiv.classList.add('bg-indigo-50', 'border-indigo-300');
             });
         });
+        
+        Echo.channel('live-queue.{{$queue->id}}')
+      .listen('QueueSettingsChanged', () => {
+          
+          //Refresh page just in case admin changes window open/close or other data
+          setTimeout(() => {
+              location.reload()
+          }, 2000); // 2000ms = 2 seconds
+      });
     });
 </script>

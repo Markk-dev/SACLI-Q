@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\QueueSettingsChanged;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -67,7 +69,7 @@ class QueueController extends Controller
         return redirect()->route('admin.queue.list')->with('success', 'Queue deleted successfully.');
     }
 
-    //To see associated queue windows and other data
+    //To see associated queue windows and other data //Admin Section
     public function viewQueue($id)
     {
         $queue = Queue::with('Windows')->findOrFail($id);
@@ -100,6 +102,7 @@ class QueueController extends Controller
         $queue = Queue::findOrFail($queue_id);
         $Window = new Window([
             'name' => $request->name,
+            'limit'=> 100,
             'description' => $request->description,
         ]);
         $queue->Windows()->save($Window);
@@ -178,11 +181,21 @@ class QueueController extends Controller
         return view('user.MyQueues', compact('queues', 'windows'));
     }
 
-    // Anotehr view
+    // View a specific queue associated with the user
+
     public function manageQueue($id)
     {
         $queue = Queue::with('windows')->findOrFail($id);
-        return view('user.queuedetails', compact('queue'));
+        $WindowIds = $queue->windows->pluck('id');
+    
+        // Get the number of tickets generated today for each window
+        $ticketsPerWindow = Ticket::whereIn('window_id', $WindowIds)
+                                    ->whereDate('created_at', Carbon::today())
+                                    ->selectRaw('window_id, count(*) as ticket_count')
+                                    ->groupBy('window_id')
+                                    ->pluck('ticket_count', 'window_id');
+    
+        return view('user.queuedetails', compact('queue', 'ticketsPerWindow'));
     }
 
     //Showing the dashboard for queuing
@@ -221,18 +234,19 @@ class QueueController extends Controller
                                      ->exists();
     
         if (!$accessExists) {
-            return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
+            return response()->json(['success' => true, 'message' => 'You do not have the required privileges to perform this action.'], 403);
         }
     
         // Prevent opening the window if the queue is closed
-        if ($queue->status === 'closed' && $window->status === 'open') {
-            return response()->json(['success' => false, 'message' => 'The queue is closed. You cannot open the window.'], 403);
+        if ($queue->status === 'closed') {
+            return response()->json(['success' => true, 'message' => 'The queue is closed. You cannot open the window.'], 403);
         }
     
         // Toggle the window status
         $window->status = $window->status === 'open' ? 'closed' : 'open';
         $window->save();
     
+        broadcast(new QueueSettingsChanged($queue->id));
         return response()->json(['success' => true, 'message' => 'Window status updated successfully.']);
     }
     
@@ -258,14 +272,13 @@ class QueueController extends Controller
     
         // Update the status of all windows associated with the queue
         $queue->windows()->update(['status' => $newStatus]);
-    
+        broadcast(new QueueSettingsChanged($queue->id));
         return response()->json(['success' => true, 'message' => 'Queue and windows status updated successfully.']);
     }
     
     
     public function clearQueue($id)
     {
-        
         $user = Auth::user();
         $queue = Queue::findOrFail($id);
         $accessExists = WindowAccess::where('user_id', $user->id)
@@ -277,16 +290,15 @@ class QueueController extends Controller
         if (!$accessExists) {
             return response()->json(['success' => false, 'message' => 'You do not have the required privileges to perform this action.'], 403);
         }
-    
-        $waitingItems = $queue->tickets()->get();
+
     
         if (!$queue->tickets()->exists()) {
             return response()->json(['success' => true, 'message' => 'No tickets found.']);
         }
         
-        $queue->tickets()->update([
-            'status' => 'Completed'
-        ]);
+        $queue->tickets()
+        ->whereIn('status', ['Waiting', 'On Hold'])
+        ->delete();
     
         return response()->json(['success' => true, 'message' => 'Queue cleared successfully.']);
     }

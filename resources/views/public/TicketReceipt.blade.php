@@ -11,13 +11,14 @@
                 
                 <div class="text-center">
                     <p class="text-2xl text-gray-800 mb-4"><strong>Code:</strong> {{ $Ticket->code }}</p>
+                    <p class="text-xl text-gray-600 mb-4"><strong>Ticket #:</strong> {{ $Ticket->ticket_number ?? 'N/A' }}</p>
                     <p class="text-xl text-gray-600 mb-4"><strong>Name:</strong> {{ $Ticket->name ?? 'N/A' }}</p>
                     <p class="text-xl text-gray-600 mb-4"><strong>Window:</strong> {{ $Ticket->window->name }}</p>
                     <p class="text-xl text-gray-600 mb-4"><strong>Status:</strong> {{ $Ticket->status }}</p>
                 </div>
                 
                 <div class="flex justify-center mt-8">
-                    <a href="{{ route('ticketing', ['code' => $Ticket->queue_id]) }}" class="px-8 py-4 bg-indigo-600 text-white text-lg font-bold rounded-lg shadow hover:bg-indigo-700 transition-all">
+                    <a href="{{ route('ticketing', ['code' => $Queue->code]) }}" class="px-8 py-4 bg-indigo-600 text-white text-lg font-bold rounded-lg shadow hover:bg-indigo-700 transition-all">
                         Back to Ticketing
                     </a>
                 </div>

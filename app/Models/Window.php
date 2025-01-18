@@ -10,6 +10,7 @@ class Window extends Model
     public $timestamps = true;
     protected $fillable = [
         'name',
+        'limit', // Daily ticket limit
         'description',
         'status'
     ];

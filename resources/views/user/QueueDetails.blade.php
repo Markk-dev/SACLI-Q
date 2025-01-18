@@ -111,6 +111,13 @@
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                 Toggle
                                             </th>
+                                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                # Tickets generated today
+                                            </th>
+                                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                Daily ticket limit
+                                            </th>
+                                            
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -149,6 +156,20 @@
                                                         </span>
                                                     </label>
                                                 </td>
+                                                <td>
+                                                    <div class="w-100 text-sm font-medium text-gray-900 dark:text-white text-center">
+                                                        {{ isset($ticketsPerWindow[$window->id]) ? $ticketsPerWindow[$window->id] : 0 }} 
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 flex justify-center items-center">
+                                                    <input 
+                                                        type="number" 
+                                                        name="limit" 
+                                                        value="{{$window->limit}}" 
+                                                        class="inputLimit w-20 text-center border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        data-window="{{$window->id}}"
+                                                    >
+                                                </td>                                                
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -176,6 +197,7 @@
         toggleWindow: "{{ route('window.toggle', ['id' => ':id']) }}",
         toggleQueue: "{{ route('queue.toggle', ['id' => ':id']) }}",
         clearQueue: "{{ route('queue.clear', ['id' => ':id']) }}",
+        setLimit:"{{ route('window.setLimit',['window_id' => ':window_id', 'limit'=>':limit']) }}",
     };
     
 
@@ -198,11 +220,11 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert('Window status updated successfully.');
-                            location.reload();
+                            alert(data.message);
                         } else {
-                            alert('Failed to update window status.');
+                            alert(data.message);
                         }
+                        location.reload()
                     })
                     .catch(error => {
                         console.error('Error:', error);
@@ -225,10 +247,11 @@
                 .then(data => {
                     if (data.success) {
                         alert('Queue status updated successfully.');
-                        location.reload();
                     } else {
                         alert('Failed to update queue status.');
                     }
+
+                    setTimeout(() => location.reload(true), 100);
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -250,7 +273,6 @@
                 .then(data => {
                     if (data.success) {
                         alert('Queue cleared successfully.');
-                        location.reload();
                     } else {
                         alert('Failed to clear queue.');
                     }
@@ -281,6 +303,39 @@
                 });
             } else {
                 console.error('No sibling element with the class "statusMessage" found.');
+            }
+        });
+    
+        //Changing limit on how many tickets can be generated each day
+        $('.inputLimit').on('keypress', function (event) {
+            if (event.which === 13) { // "Enter" key
+                const limit = $(this).val(); // Get the input value
+                const window_id = $(this).data('window'); // Get the data-window attribute
+
+                fetch(routes.setLimit.replace(':window_id', window_id).replace(':limit', limit), {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+
+                    if (data.success) {
+                        alert('Daily ticket limit has been changed.');
+                    } else {
+                        alert('Failed to update limit.');
+                    }
+
+                    setTimeout(() => location.reload(true), 100);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the data');
+                });
+                
+
             }
         });
     });

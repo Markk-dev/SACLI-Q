@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Queue;
@@ -21,18 +22,32 @@ class PublicController extends Controller
     //Public Methods
     public function liveQueue($code)
     {
-        $queue = Queue::with('Windows')->where('code', $code)->firstOrFail();
-    
-        // Pass the fetched data to the view
-        return view('public.LiveQueue', compact('queue'));
+        try {
+            $queue = Queue::with('Windows')->where('code', $code)->firstOrFail();
+
+            // Pass the fetched data to the view
+            return view('public.LiveQueue', compact('queue'));
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'No queue found with the given code.',
+            ], 404);
+        }
     }
     
 
     function ticketing($code){
-        $queue = Queue::where('code', $code)->first();
+        try {
+            $queue = Queue::where('code', $code)->firstOrFail();
+            return view('public.Ticketing',compact('queue'));
 
-        return view('public.Ticketing',compact('queue'));
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'No queue found with the given code.',
+            ], 404);
+        }
     }
+
 
     public function ticketingSubmit(Request $request)
     {
@@ -46,21 +61,38 @@ class PublicController extends Controller
             'window_id.exists' => 'The selected window group does not exist',
         ]);
     
-
         try {
             // Fetch the queue and window
-            $window = Window::where('id', $request->window_id)->where('queue_id', $request->queue_id)->firstOrFail();
+            $window = Window::where('id', $request->window_id)
+                ->where('queue_id', $request->queue_id)
+                ->firstOrFail();
     
-            if ($window->status !== 'open') {
-                return back()->withErrors(['error' => 'The selected window is currently not open.']);
+    
+            // Get the number of tickets generated today for the specific window
+            $ticketsGeneratedToday = Ticket::where('window_id', $request->window_id)
+                ->whereDate('created_at', Carbon::today())
+                ->count();
+
+            // Check if the ticket limit has been reached
+            if ($ticketsGeneratedToday >= $window->limit) {
+                // If the limit is reached, close the window and return an error
+                $window->status = 'closed';
+                $window->save();
+    
+                return back()->withErrors(['error' => 'The ticket limit for today has been reached. The window has been closed.']);
             }
     
             // Generate a unique 6-character code
             $code = $this->generateUniqueCode();
+            
+            // Get the next ticket number for the window
+            $ticket_number = Ticket::where('window_id', $request->window_id)->max('ticket_number');
+            $ticket_number = $ticket_number ? $ticket_number + 1 : 1;
     
             // Create a new Ticket record
             $Ticket = Ticket::create([
                 'queue_id' => $request->queue_id,
+                'ticket_number' => $ticket_number,
                 'window_id' => $request->window_id,
                 'name' => $request->name,
                 'status' => "Waiting",
@@ -76,12 +108,11 @@ class PublicController extends Controller
         }
     }
     
-    
     public function ticketingSuccess($id)
     {
         $Ticket = Ticket::with('window')->findOrFail($id);
         $Queue = Queue::findOrFail($Ticket->queue_id);
-        return view('public.TicketReceipt', compact('Ticket'));
+        return view('public.TicketReceipt', compact('Ticket', 'Queue'));
     }
 
     /**
@@ -102,7 +133,7 @@ class PublicController extends Controller
         $ticketCode = $request->input('ticketCode'); // Get the ticket code from the request
         
         // Search for the ticket by code
-        $ticket = Ticket::where('code', $ticketCode)->first();
+        $ticket = Ticket::with('queue')->with('window')->where('code', $ticketCode)->first();
         
         if (!$ticket) {
             // If no ticket is found, return with an error message

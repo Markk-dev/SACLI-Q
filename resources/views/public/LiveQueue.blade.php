@@ -85,7 +85,7 @@
                       const ticketsHtml = `
                           <ul class="pl-6 list-disc text-lg text-gray-700 space-y-2">
                               ${response.ticketsOldest
-                                  .map(ticket => `<li>${ticket.code} - ${ticket.created_at}</li>`)
+                                  .map(ticket => `<li>${ticket.code}</li>`)
                                   .join('')}
                           </ul>`;
                       ticketsContainer.append(ticketsHtml);

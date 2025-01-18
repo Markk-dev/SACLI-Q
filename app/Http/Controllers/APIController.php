@@ -17,7 +17,7 @@ use App\Events\NewTicketEvent;
 
 class APIController extends Controller
 {
-        //API Methods
+    //Fetch api methods
     //For setting window name
     public function getLiveData($id)
     {
@@ -79,6 +79,30 @@ class APIController extends Controller
             'success' => true,
             'message' => 'Window Name Updated',
         ], 200);
+    }
+
+    //Setting window ticket generation limit
+    public function setLimit($window_id, $limit)
+    {
+        // Validate limit value (make sure it's an integer and within a valid range)
+        if (!is_numeric($limit) || $limit <= 0) {
+            return response()->json(['error' => 'Invalid limit value.'], 400);
+        }
+
+        // Find the window by its ID
+        $window = Window::find($window_id);
+
+        if (!$window) {
+            // If the window doesn't exist, return a 404 response
+            return response()->json(['error' => 'Window not found.'], 404);
+        }
+
+        // Update the window's limit
+        $window->limit = $limit;
+        $window->save();
+
+        // Return a success response
+        return response()->json(['success' => 'Limit updated successfully.'], 200);
     }
 
    //Get Current Ticket For Window
@@ -271,33 +295,58 @@ class APIController extends Controller
     }
 
 
-    //Get all tickets that are currently on hold 
-    public function getAllTicketsOnHold($WindowId) {
-        $tickets = Ticket::where('window_id', $WindowId)
-                         ->where('status', 'On Hold')
-                         ->orderBy('completed_at', 'desc')
-                         ->get();
-
-        return response()->json(['success' => true, 'tickets' => $tickets]);
-    }
-
     //get the count of upcoming tickets
     public function getUpcomingTicketsCount($WindowId){
         $upcomingTicketsCount = Ticket::where('window_id', $WindowId)
-                                      ->where('status', 'Waiting')
-                                      ->count();
+                                        ->where('status', 'Waiting')
+                                        ->count();
     
         return response()->json(['success' => true, 'upcoming_tickets_count' => $upcomingTicketsCount]);
     }
 
-    //get 10 most recent completed tickets
-    public function getAllCompletedTickets($WindowId){
+
+    // Get all On-Hold tickets with pagination
+    public function getAllTicketsOnHold($WindowId, Request $request) {    
+        $search = $request->input('search', '');  // Get search term
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', 20);
+    
+        $query = Ticket::where('window_id', $WindowId)->where('status', 'On Hold');
+    
+        // Apply search if query exists
+        if ($search) {
+            $query->where('code', 'like', '%' . $search . '%');  // You can adjust this field and condition based on your ticket structure
+        }
+    
+        $tickets = $query->paginate($perPage, ['*'], 'page', $page);
+    
+        return response()->json([
+            'success' => true,
+            'tickets' => $tickets->items(),
+            'total_pages' => $tickets->lastPage(),
+        ]);
+    }
+
+    // Get all Completed tickets with pagination
+    public function getAllCompletedTickets($WindowId, Request $request) {
+        // Get the per_page, sort_by, and sort_order parameters
+        $perPage = $request->get('per_page', 20);
+        $sortBy = $request->get('sort_by', 'completed_at'); // Default to 'completed_at'
+        $sortOrder = $request->get('sort_order', 'desc'); // Default to descending order
+    
+        // Get tickets, paginate, and apply dynamic sorting
         $tickets = Ticket::where('window_id', $WindowId)
                          ->where('status', 'Completed')
-                         ->orderBy('completed_at', 'desc')
-                         ->limit(10)
-                         ->get();
-
-        return response()->json(['success' => true, 'tickets' => $tickets]);
+                         ->orderBy($sortBy, $sortOrder) // Apply dynamic sorting
+                         ->paginate($perPage);
+    
+        return response()->json([
+            'success' => true,
+            'tickets' => $tickets->items(),
+            'total_pages' => $tickets->lastPage(),
+            'current_page' => $tickets->currentPage(),
+        ]);
     }
+    
+
 }

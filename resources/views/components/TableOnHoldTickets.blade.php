@@ -154,8 +154,9 @@
             url: finalUrl,
             method: 'GET',
             success: function(response) {
-                console.log(response);
+
                 if (response.success) {
+                    location.reload();
                     alert(response['message']);
                 } else {
                     alert(response['message']);

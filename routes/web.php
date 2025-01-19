@@ -59,17 +59,22 @@ Route::get('/Sacli-Q.com/ticketing/success/{id}', [PublicController::class, 'tic
 
 // API routes
 Route::post('/Sacli-Q.com/api/set-window/{id}', [APIController::class, 'updateWindow'])->name('updateWindowName'); // Update window name
-Route::get('/Sacli-Q.com/api/ticket/current/{window_id}', [APIController::class, 'getCurrentTicketForWindow'])->name('getCurrentTicketForWindow'); // Get current ticket for a window
+Route::get('/Sacli-Q.com/api/ticket/current/{window_id}', [APIController::class, 'getCurrentTicketForWindow'])->name('getCurrentTicketData'); // Get current ticket for a window
+Route::get('/Sacli-Q.com/api/ticket/window/{window_id}/', [APIController::class, 'getWindowUserData'])->name('getWindowUserData'); // Get all tickets for a window group
+
 Route::get('/Sacli-Q.com/api/ticket/next/{window_id}', [APIController::class, 'getNextTicketForWindow'])->name('getNextTicketForWindow'); // Get next ticket for a window
 Route::get('/Sacli-Q.com/api/ticket/complete/{window_id}', [APIController::class, 'setToComplete'])->name('setToComplete'); // Set ticket to complete
 Route::get('/Sacli-Q.com/api/ticket/on-hold/{window_id}', [APIController::class, 'getNextOnHoldTicket'])->name('getFromTicketsOnHold'); // Get next on-hold ticket
 Route::get('/Sacli-Q.com/api/ticket/set-to-hold/{window_id}', [APIController::class, 'putTicketOnHold'])->name('setToHold'); // Set ticket to on hold
-Route::get('/Sacli-Q.com/api/ticket/all-on-hold/{window_id}', [APIController::class, 'getAllTicketsOnHold'])->name('allTicketsOnHold'); // Get all on-hold tickets
+Route::get('/Sacli-Q.com/api/ticket/window/{window_id}/ticket/{ticket_id}', [APIController::class, 'handleTicket'])->name('handleTicket');
 
-Route::get('/Sacli-Q.com/api/ticket/upcoming/{window_id}', [APIController::class, 'getUpcomingTicketsCount'])->name('getUpcomingTicketsCount'); // Get all tickets for a window group
-Route::get('/Sacli-Q.com/api/ticket/completed/{window_id}', [APIController::class, 'getAllCompletedTickets'])->name('allCompletedTickets'); // Get all completed tickets for a window group
+Route::get('/Sacli-Q.com/api/ticket/all-on-hold/{window_id}', [APIController::class, 'getTicketsOnHold'])->name('getTicketsOnHold'); // Get all on-hold tickets
+Route::get('/Sacli-Q.com/api/ticket/upcoming/{window_id}', [APIController::class, 'getUpcomingTickets'])->name('getUpcomingTickets'); // Get all tickets for a window group
+Route::get('/Sacli-Q.com/api/ticket/completed/{window_id}', [APIController::class, 'getCompletedTickets'])->name('getCompletedTickets'); // Get all completed tickets for a window group
 Route::get('/Sacli-Q.com/api/queue/{id}', [APIController::class, 'getLiveData'])->name('getLiveData'); // Get live data for a queue
+
 Route::get('/Sacli-Q.com/api/window/{window_id}/set-limit/{limit}', [APIController::class, 'setLimit'])->name('window.setLimit'); 
+
 Route::get('/Sacli-Q.com/info', [PublicController::class, 'info'])->name('info'); // Working
 
 

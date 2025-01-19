@@ -105,7 +105,10 @@ class APIController extends Controller
         return response()->json(['success' => 'Limit updated successfully.'], 200);
     }
 
-   //Get Current Ticket For Window
+
+
+
+    //Get Current Ticket For Window
     public function getCurrentTicketForWindow($WindowId){
        $user_id = Auth::user()->id;
        $onCall = Ticket::where('window_id', $WindowId)
@@ -127,7 +130,7 @@ class APIController extends Controller
        }
     }
 
-     //For button "Next Ticket"
+    //For button "Next Ticket"
     public function getNextTicketForWindow($WindowId){
         //Check if user is authenticated
         $user_id = Auth::user()->id;
@@ -144,7 +147,7 @@ class APIController extends Controller
                 'message' => 'Please finish the current ticket first.'], 200);
         }
 
-        //Gets the next ticket for the given window 
+        //Handles a ticket  the next ticket for the given window 
         $Ticket = Ticket::where('window_id', $WindowId)
                         ->where('status', 'Waiting')
                         ->orderBy('created_at', 'asc')
@@ -157,8 +160,8 @@ class APIController extends Controller
         if (!$userHasAccess || $userHasAccess == null) {
             return response()->json([
                 'success'=>false, 
-                'message' => 'You do not have access to this window.
-            '], 200);
+                'message' => 'You do not have access to this window.'
+            ], 200);
 
         }else if($userHasAccess->window_name == null && $userHasAccess->window_name == ''){
             return response()->json([
@@ -294,9 +297,8 @@ class APIController extends Controller
         }
     }
 
-
-    //get the count of upcoming tickets
-    public function getUpcomingTicketsCount($WindowId){
+    //get data for a user window such as number of upcoming tickets
+    public function getWindowUserData($WindowId){
         $upcomingTicketsCount = Ticket::where('window_id', $WindowId)
                                         ->where('status', 'Waiting')
                                         ->count();
@@ -305,8 +307,70 @@ class APIController extends Controller
     }
 
 
+    public function handleTicket($WindowId,$TicketId){
+        //Check if user is authenticated
+        $user_id = Auth::user()->id;
+
+        //Number of On Called by Window
+        $onCalled = Ticket::where('window_id', $WindowId)
+                        ->where('handled_by', $user_id)
+                        ->where('status', 'Calling')
+                        ->count();
+
+        if($onCalled > 0){
+            return response()->json([
+                'success'=>false, 
+                'message' => 'Please finish the current ticket first.'], 200);
+        }
+
+        // Get the ticket for the given window based on Ticket id and ensure that the status is 'On Hold' or 'Waiting'
+        $Ticket = Ticket::where('window_id', $WindowId)
+                        ->where('id', $TicketId)
+                        ->whereIn('status', ['On Hold', 'Waiting'])
+                        ->first(); 
+                        
+        //Check is user has access to the window
+        $userHasAccess = WindowAccess::where('user_id', $user_id)
+            ->where('window_id', $WindowId)->first();
+
+        //Error Checking
+        if (!$userHasAccess || $userHasAccess == null) {
+            return response()->json([
+                'success'=>false, 
+                'message' => 'You do not have access to this window.
+            '], 200);
+
+        }else if($userHasAccess->window_name == null && $userHasAccess->window_name == ''){
+            return response()->json([
+                'success'=>false, 
+                'message' => 'Please Enter your window name first'
+            ], 200);
+
+        }else if($Ticket == null){
+            return response()->json([
+                'success'=>false, 
+                'message' => 'The ticket is no longer available.'
+            ], 200);
+        }
+        else{
+            //Update Ticket Status
+            $Ticket->status = 'Calling';
+            $Ticket->handled_by = $user_id;
+            $Ticket->called_at = Carbon::now();
+            $Ticket->save();
+
+            broadcast(new DashboardEvent($Ticket->queue_id));
+
+            return response()->json([
+                'success'=>true, 
+                'message'=> "Successfully called the next ticket",
+                'data' =>$Ticket
+            ], 200);
+        }
+    }
+
     // Get all On-Hold tickets with pagination
-    public function getAllTicketsOnHold($WindowId, Request $request) {    
+    public function getTicketsOnHold($WindowId, Request $request) {    
         $search = $request->input('search', '');  // Get search term
         $page = $request->input('page', 1);
         $perPage = $request->input('per_page', 20);
@@ -327,8 +391,28 @@ class APIController extends Controller
         ]);
     }
 
+    public function getUpcomingTickets($WindowId, Request $request) {
+        // Get the per_page, sort_by, and sort_order parameters
+        $perPage = $request->get('per_page', 20);
+        $sortBy = $request->get('sort_by', 'completed_at'); // Default to 'completed_at'
+        $sortOrder = $request->get('sort_order', 'desc'); // Default to descending order
+    
+        // Get tickets, paginate, and apply dynamic sorting
+        $tickets = Ticket::where('window_id', $WindowId)
+                         ->where('status', 'Waiting')
+                         ->orderBy($sortBy, $sortOrder) // Apply dynamic sorting
+                         ->paginate($perPage);
+    
+        return response()->json([
+            'success' => true,
+            'tickets' => $tickets->items(),
+            'total_pages' => $tickets->lastPage(),
+            'current_page' => $tickets->currentPage(),
+        ]);
+    }
+
     // Get all Completed tickets with pagination
-    public function getAllCompletedTickets($WindowId, Request $request) {
+    public function getCompletedTickets($WindowId, Request $request) {
         // Get the per_page, sort_by, and sort_order parameters
         $perPage = $request->get('per_page', 20);
         $sortBy = $request->get('sort_by', 'completed_at'); // Default to 'completed_at'

@@ -128,6 +128,7 @@
             <div class="mt-10 grid grid-cols-2 gap-6">
                 {{-- Passing the $Window from controller as prop --}}
                 <x-TableOnHoldTickets :window="$window" />
+                <x-TableUpcomingTickets :window="$window" />
                 <x-TableCompletedTickets :window="$window" />
             </div>
         </div>
@@ -176,10 +177,9 @@ $(document).ready(function() {
             url: "{{ route('getNextTicketForWindow', ['window_id' => $window->id]) }}",
             method: 'GET',
             success: function(response) {
-                console.log(response);
 
                 if(response.success) {
-                    getCurrentTicketForWindow();
+                    getCurrentTicketData();
                     getTablesAndData();
                     alert(response['message']);
                 } else {
@@ -201,7 +201,6 @@ $(document).ready(function() {
             success: function(response) {
                 console.log(response);
                 if(response.success) {
-                    getCurrentTicketForWindow();
                     getTablesAndData();
                     alert(response['message']);
                 } else {
@@ -223,7 +222,6 @@ $(document).ready(function() {
             success: function(response) {
                 console.log(response);
                 if(response.success) {
-                    getCurrentTicketForWindow();
                     getTablesAndData();
                     alert(response['message']);
                 } else {
@@ -245,7 +243,6 @@ $(document).ready(function() {
             success: function(response) {
                 console.log(response);
                 if(response.success) {
-                    getCurrentTicketForWindow();
                     getTablesAndData();
                     alert(response['message']);
                 } else {
@@ -258,12 +255,12 @@ $(document).ready(function() {
             }
         });
     });
-
-
-    function getCurrentTicketForWindow() {
+   
+    //Fetch methods for getting data
+    function getCurrentTicketData() {
         
         $.ajax({
-            url: "{{ route('getCurrentTicketForWindow', ['window_id' => $window->id]) }}",
+            url: "{{ route('getCurrentTicketData', ['window_id' => $window->id]) }}",
             method: 'GET',
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -307,14 +304,12 @@ $(document).ready(function() {
         });
     }
 
-
-    function getUpcomingTicketsCount() {
+    function getWindowUserData() {
         $.ajax({
-            url: "{{ route('getUpcomingTicketsCount', ['window_id' => $window->id]) }}",
+            url: "{{ route('getWindowUserData', ['window_id' => $window->id]) }}",
             method: 'GET',
             success: function(response) {
                 if (response.success) {
-                    console.log(response);
                     $('#upcoming-tickets-count').text(response.upcoming_tickets_count);
                 } else {
                     alert(response.message);
@@ -327,27 +322,28 @@ $(document).ready(function() {
         });
     }
 
-    //Getting all data
     function getTablesAndData() {
-        getUpcomingTicketsCount();
+        getWindowUserData();
+        getCurrentTicketData();
         getCompletedTickets(completedPage);
         getOnHoldTickets(onHoldPage);
-        getCurrentTicketForWindow();
+        getUpcomingTickets(upcomingTicketsPage);
     }
+
+    getTablesAndData();
+
 
 
     //For Synchronous Session With Live View
     Echo.channel('live-queue.{{$window->queue_id}}')
-      .listen('NewTicketEvent', () => {
-          console.log("A Ticket event has been detected");
-          
-          // Add a timeout before calling getLiveData
-          setTimeout(() => {
-            getUpcomingTicketsCount();
-          }, 3000);
-      });
-
-
-      getTablesAndData();
+    .listen('NewTicketEvent', () => {
+        console.log("A Ticket event has been detected");
+        
+        // Add a timeout before calling getLiveData
+        setTimeout(() => {
+        getWindowUserData();
+        getUpcomingTickets(upcomingTicketsPage);
+        }, 3000);
+    });
 });
 </script>

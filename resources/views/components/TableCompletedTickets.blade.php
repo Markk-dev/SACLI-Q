@@ -40,10 +40,10 @@
                 <th class="px-6 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
                     Ticket Code
                 </th>
-                <th id="sort-ticket_number" class="px-6 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
+                <th id="sort-completed_tickets-ticket_number" class="px-6 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
                     Ticket Number <span class="sort-arrow"></span>
                 </th>
-                <th id="sort-created_at" class="px-6 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
+                <th id="sort-completed_tickets-created_at" class="px-6 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
                     Completed At <span class="sort-arrow"></span>
                 </th>
             </tr>
@@ -64,98 +64,106 @@
 </div>
 
 <script>
-    // Pagination for Completed Tickets (similar logic)
-    let completedPage = 1;
-    let completedTicketsPerPage = 20;  // Adjust per page as needed
-    let totalCompletedPages = 1;
+        // Pagination for Completed Tickets (similar logic)
+        let completedPage = 1;
+        let completedTicketsPerPage = 20;  // Adjust per page as needed
+        let totalCompletedPages = 1;
 
-    let sortBy = 'completed_at'; // Default sort by 'completed_at'
-    let sortOrder = 'desc'; // Default sort order 'desc'
+        let sortBy = 'completed_at'; // Default sort by 'completed_at'
+        let sortOrder = 'desc'; // Default sort order 'desc'
 
-    function getCompletedTickets(page = 1) {
-        $.ajax({
-            url: `{{ route('allCompletedTickets', ['window_id' => $window->id]) }}?page=${page}&per_page=${completedTicketsPerPage}&sort_by=${sortBy}&sort_order=${sortOrder}`,
-            method: 'GET',
-            success: function(response) {
-                if (response.success) {
-                    totalCompletedPages = response.total_pages;
-                    $('#completed-tickets-body').html(
-                        response.tickets.map(ticket =>
+        function getCompletedTickets(page = 1) {
+            function formatDate(timestamp) {
+                const date = new Date(timestamp);
+                const options = { month: 'long' }; // Get full month name
+                const month = new Intl.DateTimeFormat('en-US', options).format(date);
+                const day = date.getDate();
+                const year = date.getFullYear();
+                const hours = date.getHours();
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const formattedHours = hours % 12 || 12; // Convert 24-hour to 12-hour
+
+                return `${month} ${day}, ${year}, ${formattedHours}:${minutes} ${ampm}`;
+            }
+
+            $.ajax({
+                url: `{{ route('getCompletedTickets', ['window_id' => $window->id]) }}?page=${page}&per_page=${completedTicketsPerPage}&sort_by=${sortBy}&sort_order=${sortOrder}`,
+                method: 'GET',
+                success: function (response) {
+                    if (response.success) {
+                        totalCompletedPages = response.total_pages;
+                        $('#completed-tickets-body').html(
+                            response.tickets.map(ticket =>
+                                `<tr>
+                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-300">${ticket.code}</td>
+                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-300">${ticket.ticket_number}</td>
+                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-300">${formatDate(ticket.completed_at)}</td>
+                                </tr>`
+                            ).join('')
+                        );
+                        $('#completed-page-number').text(`Page ${page}`);
+                        $('#previous-completed').prop('disabled', page === 1);
+                        $('#next-completed').prop('disabled', page === totalCompletedPages);
+                    } else {
+                        $('#completed-tickets-body').html(
                             `<tr>
-                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300">${ticket.code}</td>
-                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300">${ticket.ticket_number}</td>
-                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300">${ticket.completed_at}</td>
+                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300" colspan="3">No completed tickets available.</td>
                             </tr>`
-                        ).join('')
-                    );
-                    $('#completed-page-number').text(`Page ${page}`);
-                    $('#previous-completed').prop('disabled', page === 1);
-                    $('#next-completed').prop('disabled', page === totalCompletedPages);
-                } else {
-                    $('#completed-tickets-body').html(
-                        `<tr>
-                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300" colspan="3">No completed tickets available.</td>
-                        </tr>`
-                    );
+                        );
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:", error);
+                    alert("Error while fetching completed tickets");
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error:", error);
-                alert("Error while fetching completed tickets");
+            });
+        }
+
+        // Sorting for completed tickets
+        $('#sort-completed_tickets-created_at').on('click', function() {
+            // Toggle sorting order
+            sortBy = 'completed_at';
+            sortOrder = (sortOrder === 'asc') ? 'desc' : 'asc';
+            // Toggle arrow classes
+            toggleSortArrowCompletedTickets($(this), sortOrder);
+            getCompletedTickets(completedPage); // Fetch sorted data
+        });
+
+        $('#sort-completed_tickets-ticket_number').on('click', function() {
+            // Toggle sorting order
+            sortBy = 'ticket_number';
+            sortOrder = (sortOrder === 'asc') ? 'desc' : 'asc';
+            // Toggle arrow classes
+            toggleSortArrowCompletedTickets($(this), sortOrder);
+            getCompletedTickets(completedPage); // Fetch sorted data
+        });
+
+        function toggleSortArrowCompletedTickets(element, order) {
+            // Reset arrow for all headers
+            $('#sort-completed_tickets-created_at').removeClass('sort-asc sort-desc');
+            $('#sort-completed_tickets-ticket_number').removeClass('sort-asc sort-desc');
+
+
+            // Apply appropriate class based on order
+            if (order === 'asc') {
+                element.addClass('sort-asc');
+            } else {
+                element.addClass('sort-desc');
+            }
+        }
+
+        $('#previous-completed').on('click', function() {
+            if (completedPage > 1) {
+                completedPage--;
+                getCompletedTickets(completedPage);
             }
         });
-    }
 
-    // Sorting for completed tickets
-    $('#sort-created_at').on('click', function() {
-        // Toggle sorting order
-        sortBy = 'completed_at';
-        sortOrder = (sortOrder === 'asc') ? 'desc' : 'asc';
-        // Toggle arrow classes
-        toggleSortArrow($(this), sortOrder);
-        getCompletedTickets(completedPage); // Fetch sorted data
-    });
-
-    $('#sort-ticket_number').on('click', function() {
-        // Toggle sorting order
-        sortBy = 'ticket_number';
-        sortOrder = (sortOrder === 'asc') ? 'desc' : 'asc';
-        // Toggle arrow classes
-        toggleSortArrow($(this), sortOrder);
-        getCompletedTickets(completedPage); // Fetch sorted data
-    });
-
-    function toggleSortArrow(element, order) {
-        // Reset arrow for all headers
-        $('#sort-created_at').removeClass('sort-asc sort-desc');
-        $('#sort-ticket_number').removeClass('sort-asc sort-desc');
-
-        console.log("haha")
-
-        // Apply appropriate class based on order
-        if (order === 'asc') {
-            console.log("haha")
-            element.addClass('sort-asc');
-        } else {
-            console.log("haha")
-            element.addClass('sort-desc');
-        }
-    }
-
-    $('#previous-completed').on('click', function() {
-        if (completedPage > 1) {
-            completedPage--;
-            getCompletedTickets(completedPage);
-        }
-    });
-
-    $('#next-completed').on('click', function() {
+     $('#next-completed').on('click', function() {
         if (completedPage < totalCompletedPages) {
             completedPage++;
             getCompletedTickets(completedPage);
         }
     });
-
-    // Initial fetch on page load
-    getCompletedTickets(completedPage);
 </script>

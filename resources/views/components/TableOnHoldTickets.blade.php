@@ -1,20 +1,32 @@
 <!-- On-Hold Tickets Section -->
 <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-    <h2 class="text-2xl font-extrabold text-gray-700 dark:text-white mb-6 text-center">
-        On-Hold Tickets
-    </h2>
-    <!-- Search Bar -->
-    <div class="mb-4 flex justify-center">
-        <input type="text" id="search-on-hold" class="px-4 py-2 border rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Search for tickets..." />
+    <!-- Flex Container -->
+    <div class="flex items-center justify-between mb-4">
+        <!-- Heading -->
+        <h2 class="text-2xl font-extrabold text-gray-700 dark:text-white text-center">
+            On-Hold Tickets
+        </h2>
+        <!-- Search Bar -->
+        <div>
+            <input
+                type="text"
+                id="search-on-hold"
+                class="px-4 py-2 border rounded-lg dark:bg-gray-700 dark:text-white"
+                placeholder="Search for tickets..."
+            />
+        </div>
     </div>
-
+    
     <table id="on-hold-tickets" class="w-full border-none bg-white dark:bg-gray-800 border rounded-lg shadow-md">
         <thead class="bg-gray-200 dark:bg-gray-700">
             <tr>
                 <th class="px-6 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
                     Ticket Code
                 </th>
-                <th id="sort-action" class="px-6 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
+                <th class="px-6 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b">
+                    Called At
+                </th>
+                <th id="sort-action" class="px-6 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-300 uppercase tracking-wider border-b text-center" >
                     Action</span>
                 </th>
             </tr>
@@ -42,12 +54,28 @@
     let onHoldPage = 1;
     let onHoldTicketsPerPage = 20;  
     let totalOnHoldPages = 1;
-    let searchQuery = '';  // Store search query
+    let searchQueryOnHoldTicket = '';  // Store search query
 
+    let potato = 2
     // Get On-Hold Tickets with Search
     function getOnHoldTickets(page = 1) {
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const options = { month: 'long' }; // Get full month name
+            const month = new Intl.DateTimeFormat('en-US', options).format(date);
+            const day = date.getDate();
+            const year = date.getFullYear();
+            const hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const formattedHours = hours % 12 || 12; // Convert 24-hour to 12-hour
+
+            return `${month} ${day}, ${year}, ${formattedHours}:${minutes} ${ampm}`;
+        }
+
         $.ajax({
-            url: `{{ route('allTicketsOnHold', ['window_id' => $window->id]) }}?page=${page}&per_page=${onHoldTicketsPerPage}&search=${searchQuery}`,
+            url: `{{ route('getTicketsOnHold', ['window_id' => $window->id]) }}?page=${page}&per_page=${onHoldTicketsPerPage}&search=${searchQueryOnHoldTicket}`,
             method: 'GET',
             success: function(response) {
                 if (response.success) {
@@ -65,8 +93,13 @@
                             response.tickets.map(ticket =>
                                 `<tr>
                                     <td class="px-6 py-4 text-gray-600 dark:text-gray-300">${ticket.code}</td>
-                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
-                                        <button onclick="handleTicket(${ticket.code})">Handle Ticket</button>
+                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-300">${formatDate(ticket.called_at)}</td>
+                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-300 text-center">
+                                        <button 
+                                            onclick="handleOnHoldTicket(${ticket.id})"
+                                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md border border-gray-400">
+                                            Handle Ticket
+                                        </button>
                                     </td>
                                 </tr>`
                             ).join('')
@@ -104,10 +137,35 @@
 
     // Handle Search Input
     $('#search-on-hold').on('input', function() {
-        searchQuery = $(this).val(); // Get the search query
+        searchQueryOnHoldTicket = $(this).val(); // Get the search query
         onHoldPage = 1; // Reset to the first page when searching
         getOnHoldTickets(onHoldPage); // Fetch tickets based on search query
     });
 
+    function handleOnHoldTicket(ticketId) {
+        // Construct the URL with a placeholder
+        const url = `{{ route('handleTicket', ['window_id' => $window->id, 'ticket_id' => '__TICKET_ID__']) }}`;
 
-</script>
+        // Replace the placeholder with the actual ticketId
+        const finalUrl = url.replace('__TICKET_ID__', ticketId);
+
+        console.log(finalUrl);
+        $.ajax({
+            url: finalUrl,
+            method: 'GET',
+            success: function(response) {
+                console.log(response);
+                if (response.success) {
+                    alert(response['message']);
+                } else {
+                    alert(response['message']);
+                }
+                location.reload();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+                alert("Error while fetching data");
+            }
+        });
+    }
+ </script>

@@ -1,55 +1,59 @@
-<x-App>
-    <x-slot name="content" x-init="console.log({{session('error')}})">        
-        <div class="dark:bg-gray-700 h-full w-full flex flex-col justify-center items-center">
-            <div class="flex justify-center">
-                <div class="w-full max-w-md">
+<x-App class="w-80">
+    <x-slot name="content" x-init="console.log({{session('error')}})">
 
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md w-96 p-4 md:p-6 lg:p-8 xl:p-10">
-                        <div class="text-lg font-bold mb-4 text-gray-900 dark:text-white">{{ __('Login') }}</div>
+    <section class="bg-gray-50">
+        <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+            <div class="w-full bg-white rounded-lg shadow border md:mt-0 sm:max-w-lg xl:p-1 min-h-[500px]">
+                <div class="p-8 space-y-4 md:space-y-6 sm:p-8">
+                    <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-3xl">
+                        Sign in to your account
+                    </h1>
 
-                        <form method="POST" action="{{ route('login') }}">
-                            @csrf
+                    <form method="POST" action="{{ route('login') }}" class="space-y-4 md:space-y-6">
+                        @csrf
 
-                            <div class="mb-4">
-                                <label for="account_id" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">{{ __('Your Account ID') }}</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <i class="fas fa-user text-gray-400"></i>
-                                    </span>
-                                    <input id="account_id" type="text" class="block w-full p-2 pl-10 text-sm text-gray-700 dark:text-gray-300 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 @error('account_id') border-red-500 @enderror" name="account_id" value="{{ old('account_id') }}" required autocomplete="account_id" autofocus>
+                        <div class="mt-1">
+                            <label for="account_id" class="block mb-2 text-sm font-medium text-gray-900">Your Account ID</label>
+                            <input type="text" name="account_id" id="account_id" value="{{ old('account_id') }}" required autocomplete="account_id" autofocus placeholder="Your Account ID" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-[#b8f500] focus:border-[#b8f500] block w-full p-2.5 @error('account_id') border-red-500 @enderror">
+                            @error('account_id')
+                                <div class="mt-2 text-sm text-red-500">{{ $message }}</div>
+                            @enderror
+                        </div>
+                            
+                         <div>
+                            <label for="password" class="block mb-2 text-sm font-medium text-gray-900">Password</label>
+                            <input type="password" name="password" id="password" required autocomplete="current-password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-[#b8f500] focus:border-[#b8f500] block w-full p-2.5 @error('password') border-red-500 @enderror">
+                            @error('password')
+                                <div class="mt-2 text-sm text-red-500">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="flex items-center justify-between">
+                             <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="remember" name="remember" type="checkbox" class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-[#b8f500]">
                                 </div>
-                                @error('account_id')
-                                    <div class="mt-2 text-sm text-red-500">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="password" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">{{ __('Password') }}</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <i class="fas fa-lock text-gray-400"></i>
-                                    </span>
-                                    <input id="password" type="password" class="block w-full p-2 pl-10 text-sm text-gray-700 dark:text-gray-300 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 @error('password') border-red-500 @enderror" name="password" required autocomplete="current-password">
+                                <div class="ml-3 text-sm">
+                                    <label for="remember" class="text-gray-500">Remember me</label>
                                 </div>
-                                @error('password')
-                                    <div class="mt-2 text-sm text-red-500">{{ $message }}</div>
-                                @enderror
                             </div>
+                        </div>
 
-                            <div class="flex justify-end mt-4">
-                                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    {{ __('Login') }}
-                                </button>
+                        <button type="submit" class="w-full text-white bg-[#b8f500] hover:bg-[#a3e000] hover:transition-all duration-700 ease-in-out focus:ring-4 focus:outline-none focus:ring-[#b8f500] font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                            Sign in
+                        </button>
 
-                            </div>
-                            <x-ErrorAlert></x-ErrorAlert>
-                            <x-SuccessAlert></x-SuccessAlert>
                         </form>
+
+                        <p class="pt-6 text-center text-gray-400 text-xs">
+                            Manage your workflow with ease—seamlessly track, organize, and streamline your tasks to maximize productivity and efficiency.
+                        </p>
+                        
                     </div>
-                
                 </div>
             </div>
-        </div>
+        </section>
+
+        <x-ErrorAlert></x-ErrorAlert>
     </x-slot>
 </x-App>
 
